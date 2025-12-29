@@ -1,7 +1,9 @@
 import os
+import random
+
 import pandas as pd
 import ast
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, InputExample
 
 df = pd.read_csv("C:\\Users\\User\\Downloads\\IIT\\Year 2\\DSGP\\final_DS.csv")
 
@@ -25,23 +27,38 @@ def parse_skills(s):
 df['skills_list'] = df['Skills'].fillna('[]').apply(parse_skills)
 # combined textual field (title + skills)
 df['combined_text'] = df.apply(lambda r: (str(r.get('Title','')) + ' | ' + ' '.join(r['skills_list'])), axis=1)
-# lower-case & simple cleaning (you can add lemmatization later)
-df['combined_text'] = df['combined_text'].str.replace(r'\s+',' ', regex=True).str.strip().str.lower()
-
 
 models = [
     'sentence-transformers/all-MiniLM-L6-v2',
-    'sentence-transformers/all-MiniLM-L5-v2',
     'sentence-transformers/all-MiniLM-L12-v2',
     'sentence-transformers/all-mpnet-base-v2'
 ]
 
-def compute_embeddings(model_name, texts, batch_size=64, device='cpu'):
-    print("Loading model:", model_name)
-    model = SentenceTransformer(model_name, device=device)
-    embeddings = model.encode(texts,
-                              batch_size=batch_size,
-                              show_progress_bar=True,
-                              convert_to_numpy=True,
-                              normalize_embeddings=True)
-    return embeddings, model
+train_examples = []
+
+for i in range(len(df)):
+    for j in range(i + 1, len(df)):
+        skills_i = set(df.loc[i, "skills_list"])
+        skills_j = set(df.loc[j, "skills_list"])
+
+        shared = skills_i & skills_j
+
+        # Positive pair
+        if len(shared) > 0:
+            train_examples.append(
+                InputExample(
+                    texts=[df.loc[i, "combined_text"], df.loc[j, "combined_text"]],
+                    label=1.0
+                )
+            )
+
+        # Negative pair (randomly sample to avoid imbalance)
+        elif random.random() < 0.05:
+            train_examples.append(
+                InputExample(
+                    texts=[df.loc[i, "combined_text"], df.loc[j, "combined_text"]],
+                    label=0.0
+                )
+            )
+
+print("Training pairs:", len(train_examples))
