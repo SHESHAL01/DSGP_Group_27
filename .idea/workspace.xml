@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8935a41b-8f4d-44ac-ab51-539352ba9e07" name="Changes" comment="import 4  versions of sentence transformer. created a function to convert text to numerical vectors(embedding).">
+    <list default="true" id="8935a41b-8f4d-44ac-ab51-539352ba9e07" name="Changes" comment="Update the code to automatically create sentence pairs. these pairs need to fine tune the model later.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/C4.py" beforeDir="false" afterPath="$PROJECT_DIR$/C4.py" afterDir="false" />
     </list>
@@ -110,7 +110,8 @@
       <workItem from="1766636616351" duration="7391000" />
       <workItem from="1766808940112" duration="902000" />
       <workItem from="1766843125866" duration="1680000" />
-      <workItem from="1767011401632" duration="1424000" />
+      <workItem from="1767011401632" duration="3070000" />
+      <workItem from="1767402674188" duration="2484000" />
     </task>
     <task id="LOCAL-00001" summary="Import final dataset and preprocess for use sentence transformer">
       <option name="closed" value="true" />
@@ -144,7 +145,15 @@
       <option name="project" value="LOCAL" />
       <updated>1766649888839</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Update the code to automatically create sentence pairs. these pairs need to fine tune the model later.">
+      <option name="closed" value="true" />
+      <created>1767013052430</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1767013052430</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -153,10 +162,11 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Import final dataset and preprocess for use sentence transformer" />
     <MESSAGE value="import 4  versions of sentence transformer. created a function to convert text to numerical vectors(embedding)." />
-    <option name="LAST_COMMIT_MESSAGE" value="import 4  versions of sentence transformer. created a function to convert text to numerical vectors(embedding)." />
+    <MESSAGE value="Update the code to automatically create sentence pairs. these pairs need to fine tune the model later." />
+    <option name="LAST_COMMIT_MESSAGE" value="Update the code to automatically create sentence pairs. these pairs need to fine tune the model later." />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/PythonProject$C4.coverage" NAME="C4 Coverage Results" MODIFIED="1767011855129" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/PythonProject$C4.coverage" NAME="C4 Coverage Results" MODIFIED="1767413565475" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/PythonProject$Component_4.coverage" NAME="Component_4 Coverage Results" MODIFIED="1765102801622" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
