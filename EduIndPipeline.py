@@ -5,7 +5,6 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 data = pd.read_csv('data.csv')
 df = pd.DataFrame(data)
-df.head()
 
 def DataAnalysis():
     print("DATASET OVERVIEW")
@@ -43,6 +42,14 @@ def DataAnalysis():
     print("\nYEAR DISTRIBUTION")
     print(df['Year'].value_counts().sort_index())
 
-print("Before Cleaning")
-print("------------------")
-DataAnalysis()
+
+
+def main():
+    df.head()
+    print("Before Cleaning")
+    print("------------------")
+    DataAnalysis()
+
+
+if __name__ == '__main__':
+    main ()
