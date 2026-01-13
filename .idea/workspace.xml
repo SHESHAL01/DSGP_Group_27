@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8935a41b-8f4d-44ac-ab51-539352ba9e07" name="Changes" comment="add a function to evaluate 3 sentence transformer models. and compair their recall scores to find the best model.">
+    <list default="true" id="8935a41b-8f4d-44ac-ab51-539352ba9e07" name="Changes" comment="fine-tuned all models and update the code for print before and after recall values.">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/C4.py" beforeDir="false" afterPath="$PROJECT_DIR$/C4.py" afterDir="false" />
     </list>
@@ -112,7 +112,11 @@
       <workItem from="1766843125866" duration="1680000" />
       <workItem from="1767011401632" duration="3070000" />
       <workItem from="1767402674188" duration="3293000" />
-      <workItem from="1767772369124" duration="3794000" />
+      <workItem from="1767772369124" duration="4948000" />
+      <workItem from="1767777567272" duration="4420000" />
+      <workItem from="1767805252416" duration="1701000" />
+      <workItem from="1767846925475" duration="2010000" />
+      <workItem from="1768273219963" duration="6095000" />
     </task>
     <task id="LOCAL-00001" summary="Import final dataset and preprocess for use sentence transformer">
       <option name="closed" value="true" />
@@ -162,7 +166,15 @@
       <option name="project" value="LOCAL" />
       <updated>1767418225785</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="fine-tuned all models and update the code for print before and after recall values.">
+      <option name="closed" value="true" />
+      <created>1767776534783</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1767776534783</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -173,10 +185,11 @@
     <MESSAGE value="import 4  versions of sentence transformer. created a function to convert text to numerical vectors(embedding)." />
     <MESSAGE value="Update the code to automatically create sentence pairs. these pairs need to fine tune the model later." />
     <MESSAGE value="add a function to evaluate 3 sentence transformer models. and compair their recall scores to find the best model." />
-    <option name="LAST_COMMIT_MESSAGE" value="add a function to evaluate 3 sentence transformer models. and compair their recall scores to find the best model." />
+    <MESSAGE value="fine-tuned all models and update the code for print before and after recall values." />
+    <option name="LAST_COMMIT_MESSAGE" value="fine-tuned all models and update the code for print before and after recall values." />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/PythonProject$C4.coverage" NAME="C4 Coverage Results" MODIFIED="1767775328155" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/PythonProject$C4.coverage" NAME="C4 Coverage Results" MODIFIED="1768279611546" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/PythonProject$Component_4.coverage" NAME="Component_4 Coverage Results" MODIFIED="1765102801622" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

@@ -38,7 +38,6 @@ texts = df["combined_text"].tolist()
 skills = df["skills_list"].tolist()
 
 def evaluate_model(model, texts, skills, k=5):
-    print("\nEvaluating model")
 
     embeddings = model.encode(
         texts,
@@ -69,8 +68,8 @@ results = {}
 
 for model_name in models_to_test:
     print("\nEvaluating BEFORE fine-tuning:", model_name)
-    model = SentenceTransformer(model_name)   # 👈 ADD THIS LINE HERE
-    recall = evaluate_model(model, texts, skills, k=5)  # 👈 CHANGE THIS LINE
+    model = SentenceTransformer(model_name)
+    recall = evaluate_model(model, texts, skills, k=5)
     results[model_name] = recall
 
 
@@ -92,19 +91,32 @@ for i in range(len(df)):
         if len(shared) > 0:
             train_examples.append(
                 InputExample(
-                    texts=[df.loc[i, "combined_text"], df.loc[j, "combined_text"]],
+                    texts=[
+                        df.loc[i, "combined_text"],
+                        df.loc[j, "combined_text"]
+                    ],
                     label=1.0
                 )
             )
 
-        # Negative pair (randomly sample to avoid imbalance)
+        # Negative pair (random sampling to avoid imbalance)
         elif random.random() < 0.05:
             train_examples.append(
                 InputExample(
-                    texts=[df.loc[i, "combined_text"], df.loc[j, "combined_text"]],
+                    texts=[
+                        df.loc[i, "combined_text"],
+                        df.loc[j, "combined_text"]
+                    ],
                     label=0.0
                 )
             )
+
+# -------- LIMIT TRAINING PAIRS (IMPORTANT) --------
+MAX_PAIRS = 2000
+
+if len(train_examples) > MAX_PAIRS:
+    train_examples = random.sample(train_examples, MAX_PAIRS)
+
 
 
 
@@ -138,13 +150,13 @@ for model_name in models_to_test:
     )
 
     # Evaluate after fine-tuning
+    print("\nEvaluating AFTER fine-tuning:", model_name)
     recall_after = evaluate_model(model, texts, skills, k=5)
 
     final_results.append({
         "Model": model_name,
         "Recall@5 (Before)": results[model_name],
         "Recall@5 (After)": recall_after,
-        "Improvement": recall_after - results[model_name]
     })
 
 # -------- SHOW FINAL COMPARISON --------
