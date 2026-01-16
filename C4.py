@@ -1,5 +1,4 @@
 import random
-
 import pandas as pd
 import ast
 from sentence_transformers import SentenceTransformer, InputExample, losses
@@ -62,74 +61,63 @@ def evaluate_model(model, texts, skills, k=5):
 
     return hits / len(texts)
 
-results = {}
-
-results = {}
-
 for model_name in models_to_test:
-    print("\nEvaluating BEFORE fine-tuning:", model_name)
+    print("\nEvaluating Model:", model_name)
     model = SentenceTransformer(model_name)
     recall = evaluate_model(model, texts, skills, k=5)
-    results[model_name] = recall
+    print("Recall Score:", recall)
 
+final_model = 'sentence-transformers/all-MiniLM-L6-v2'
 
-# -------- SHOW RESULTS --------
-results_df = pd.DataFrame.from_dict(
-    results, orient="index", columns=["Recall@5"]
-)
+def fine_tune_model():
+    train_examples = []
 
-train_examples = []
+    for i in range(len(df)):
+        for j in range(i + 1, len(df)):
+            skills_i = set(df.loc[i, "skills_list"])
+            skills_j = set(df.loc[j, "skills_list"])
 
-for i in range(len(df)):
-    for j in range(i + 1, len(df)):
-        skills_i = set(df.loc[i, "skills_list"])
-        skills_j = set(df.loc[j, "skills_list"])
+            shared = skills_i & skills_j
 
-        shared = skills_i & skills_j
-
-        # Positive pair
-        if len(shared) > 0:
-            train_examples.append(
-                InputExample(
-                    texts=[
-                        df.loc[i, "combined_text"],
-                        df.loc[j, "combined_text"]
-                    ],
-                    label=1.0
+            # Positive pair
+            if len(shared) > 0:
+                train_examples.append(
+                    InputExample(
+                        texts=[
+                            df.loc[i, "combined_text"],
+                            df.loc[j, "combined_text"]
+                        ],
+                        label=1.0
+                    )
                 )
-            )
 
-        # Negative pair (random sampling to avoid imbalance)
-        elif random.random() < 0.05:
-            train_examples.append(
-                InputExample(
-                    texts=[
-                        df.loc[i, "combined_text"],
-                        df.loc[j, "combined_text"]
-                    ],
-                    label=0.0
+            # Negative pair (random sampling to avoid imbalance)
+            elif random.random() < 0.05:
+                train_examples.append(
+                    InputExample(
+                        texts=[
+                            df.loc[i, "combined_text"],
+                            df.loc[j, "combined_text"]
+                        ],
+                        label=0.0
+                    )
                 )
-            )
 
-# -------- LIMIT TRAINING PAIRS (IMPORTANT) --------
-MAX_PAIRS = 2000
+    # -------- LIMIT TRAINING PAIRS (IMPORTANT) --------
+    MAX_PAIRS = 2000
 
-if len(train_examples) > MAX_PAIRS:
-    train_examples = random.sample(train_examples, MAX_PAIRS)
-
+    if len(train_examples) > MAX_PAIRS:
+        train_examples = random.sample(train_examples, MAX_PAIRS)
 
 
 
-# FINE-TUNE EACH MODEL & EVALUATE AFTER TRAINING
-final_results = []
 
-for model_name in models_to_test:
     print("\n======================================")
-    print("Fine-tuning:", model_name)
+    print("Fine-tuning:", final_model)
     print("======================================")
 
     # Load base model
-    model = SentenceTransformer(model_name)
+    model = SentenceTransformer(final_model)
 
     # DataLoader
     train_dataloader = DataLoader(
@@ -152,15 +140,3 @@ for model_name in models_to_test:
     # Evaluate after fine-tuning
     print("\nEvaluating AFTER fine-tuning:", model_name)
     recall_after = evaluate_model(model, texts, skills, k=5)
-
-    final_results.append({
-        "Model": model_name,
-        "Recall@5 (Before)": results[model_name],
-        "Recall@5 (After)": recall_after,
-    })
-
-# -------- SHOW FINAL COMPARISON --------
-final_df = pd.DataFrame(final_results)
-
-print("\nMODEL COMPARISON RESULTS (Before vs After Fine-Tuning)")
-print(final_df.sort_values("Recall@5 (After)", ascending=False))
