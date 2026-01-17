@@ -42,11 +42,23 @@ def DataAnalysis():
     print("\nYEAR DISTRIBUTION")
     print(df['Year'].value_counts().sort_index())
 
+def clean_data(df):
+    # Removing duplicates and Nan values
+    df = df.dropna()
+    df = df.drop_duplicates(keep='first')
 
+    # Fixing inconsistent data
+    df['Degree Program'] = df['Degree Program'].str.strip().str.lower().str.capitalize()
+    df['Course Name'] = df['Course Name'].str.strip().str.lower().str.capitalize()
 
 def main():
     df.head()
+    print("------------------")
     print("Before Cleaning")
+    print("------------------")
+    DataAnalysis()
+    print("------------------")
+    print("\nAfter Cleaning")
     print("------------------")
     DataAnalysis()
 
