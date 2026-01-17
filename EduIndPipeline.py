@@ -3,10 +3,7 @@ import numpy as np
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.feature_extraction.text import TfidfVectorizer
 
-data = pd.read_csv('data.csv')
-df = pd.DataFrame(data)
-
-def DataAnalysis():
+def DataAnalysis(df):
     print("DATASET OVERVIEW")
     print(f"Dataset Shape: {df.shape}")
     print(f"Number of Records: {df.shape[0]}")
@@ -51,16 +48,30 @@ def clean_data(df):
     df['Degree Program'] = df['Degree Program'].str.strip().str.lower().str.capitalize()
     df['Course Name'] = df['Course Name'].str.strip().str.lower().str.capitalize()
 
+def word_count_analysis(df):
+    print("COURSE NAME ANALYSIS")
+    course_name_lengths = df['Course Name'].str.len()
+    print(f"Average Course Name Length: {course_name_lengths.mean():.2f} characters")
+    print(f"Min Length: {course_name_lengths.min()}")
+    print(f"Max Length: {course_name_lengths.max()}")
+
+    word_counts = df['Course Name'].str.split().str.len()
+    print(f"\nAverage Words in Course Name: {word_counts.mean():.2f}")
+
 def main():
+    data = pd.read_csv('data.csv')
+    df = pd.DataFrame(data)
     df.head()
     print("------------------")
     print("Before Cleaning")
     print("------------------")
-    DataAnalysis()
+    DataAnalysis(df)
     print("------------------")
     print("\nAfter Cleaning")
     print("------------------")
-    DataAnalysis()
+    clean_data(df)
+    DataAnalysis(df)
+    word_count_analysis(df)
 
 
 if __name__ == '__main__':
