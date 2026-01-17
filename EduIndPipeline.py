@@ -58,6 +58,9 @@ def word_count_analysis(df):
     word_counts = df['Course Name'].str.split().str.len()
     print(f"\nAverage Words in Course Name: {word_counts.mean():.2f}")
 
+def feature_extraction(df):
+    pass
+
 def main():
     data = pd.read_csv('data.csv')
     df = pd.DataFrame(data)
@@ -72,6 +75,7 @@ def main():
     clean_data(df)
     DataAnalysis(df)
     word_count_analysis(df)
+    feature_extraction(df)
 
 
 if __name__ == '__main__':
