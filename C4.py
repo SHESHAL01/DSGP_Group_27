@@ -4,11 +4,13 @@ import ast
 from sentence_transformers import SentenceTransformer, InputExample, losses
 from sklearn.neighbors import NearestNeighbors
 from torch.utils.data import DataLoader
+import os
 
 df = pd.read_csv("C:\\Users\\User\\Downloads\\IIT\\Year 2\\DSGP\\final_DS.csv")
+MODEL_PATH = "models/minilm_l6_fine_tuned"
 
-print("rows:", len(df))
-print("columns:", df.columns.tolist())
+# print("rows:", len(df))
+# print("columns:", df.columns.tolist())
 
 #Preprocess text
 def parse_skills(s):
@@ -117,7 +119,7 @@ def fine_tune_model():
     print("======================================")
 
     # Load base model
-    model = SentenceTransformer(final_model)
+    finetuned_model = SentenceTransformer(final_model)
 
     # DataLoader
     train_dataloader = DataLoader(
@@ -127,16 +129,29 @@ def fine_tune_model():
     )
 
     # Loss
-    train_loss = losses.CosineSimilarityLoss(model)
+    train_loss = losses.CosineSimilarityLoss(finetuned_model)
 
     # Fine-tune
-    model.fit(
+    finetuned_model.fit(
         train_objectives=[(train_dataloader, train_loss)],
         epochs=1,
         warmup_steps=100,
         show_progress_bar=True
     )
+    finetuned_model.save("models/minilm_l6_fine_tuned")
+    return finetuned_model
 
-    # Evaluate after fine-tuning
-    print("\nEvaluating AFTER fine-tuning:", model_name)
-    recall_after = evaluate_model(model, texts, skills, k=5)
+# Evaluate after fine-tuning
+print("\nEvaluating AFTER fine-tuning:", final_model)
+# -------- LOAD OR TRAIN FINE-TUNED MODEL --------
+if os.path.exists(MODEL_PATH):
+    print("Loading fine-tuned model from disk...")
+    fine_tuned_model = SentenceTransformer(MODEL_PATH)
+else:
+    print("Fine-tuned model not found. Training now...")
+    fine_tuned_model = fine_tune_model()
+
+# -------- EVALUATE FINE-TUNED MODEL --------
+print("\nEvaluating AFTER fine-tuning:", final_model)
+recall_after = evaluate_model(fine_tuned_model, texts, skills, k=5)
+print("Recall Score after fine-tuning:", recall_after)
