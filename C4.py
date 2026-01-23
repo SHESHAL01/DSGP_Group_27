@@ -5,6 +5,7 @@ from sentence_transformers import SentenceTransformer, InputExample, losses
 from sklearn.neighbors import NearestNeighbors
 from torch.utils.data import DataLoader
 import os
+import numpy as np
 
 df = pd.read_csv("C:\\Users\\User\\Downloads\\IIT\\Year 2\\DSGP\\final_DS.csv")
 MODEL_PATH = "models/minilm_l6_fine_tuned"
@@ -63,11 +64,11 @@ def evaluate_model(model, texts, skills, k=5):
 
     return hits / len(texts)
 
-for model_name in models_to_test:
-    print("\nEvaluating Model:", model_name)
-    model = SentenceTransformer(model_name)
-    recall = evaluate_model(model, texts, skills, k=5)
-    print("Recall Score:", recall)
+# for model_name in models_to_test:
+#     print("\nEvaluating Model:", model_name)
+#     model = SentenceTransformer(model_name)
+#     recall = evaluate_model(model, texts, skills, k=5)
+#     print("Recall Score:", recall)
 
 final_model = 'sentence-transformers/all-MiniLM-L6-v2'
 
@@ -155,3 +156,20 @@ else:
 print("\nEvaluating AFTER fine-tuning:", final_model)
 recall_after = evaluate_model(fine_tuned_model, texts, skills, k=5)
 print("Recall Score after fine-tuning:", recall_after)
+
+chosen_model = SentenceTransformer("models/minilm_l6_fine_tuned")
+
+def build_embedding_index(chosen_model, texts):
+    embeddings = chosen_model.encode(
+        texts,
+        convert_to_numpy=True,
+        normalize_embeddings=True,
+        show_progress_bar=True
+    )
+    np.save("course_embeddings.npy", embeddings)
+    return embeddings
+
+if os.path.exists("job_embeddings.npy"):
+    job_embeddings = np.load("job_embeddings.npy")
+else:
+    job_embeddings = build_embedding_index(fine_tuned_model, texts)

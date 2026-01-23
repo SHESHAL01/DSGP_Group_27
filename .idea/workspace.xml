@@ -4,7 +4,18 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8935a41b-8f4d-44ac-ab51-539352ba9e07" name="Changes" comment="optimize sentence-transformer training by limiting training pairs">
+    <list default="true" id="8935a41b-8f4d-44ac-ab51-539352ba9e07" name="Changes" comment="update code to save the fine_tuned model in local storage.">
+      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/1_Pooling/config.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/README.md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/config.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/config_sentence_transformers.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/model.safetensors" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/modules.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/sentence_bert_config.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/special_tokens_map.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/tokenizer.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/tokenizer_config.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/vocab.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/C4.py" beforeDir="false" afterPath="$PROJECT_DIR$/C4.py" afterDir="false" />
     </list>
@@ -117,7 +128,13 @@
       <workItem from="1767805252416" duration="1701000" />
       <workItem from="1767846925475" duration="2010000" />
       <workItem from="1768273219963" duration="6453000" />
-      <workItem from="1768487887412" duration="3456000" />
+      <workItem from="1768487887412" duration="5441000" />
+      <workItem from="1768657370409" duration="4840000" />
+      <workItem from="1768755022858" duration="1112000" />
+      <workItem from="1768796016777" duration="6745000" />
+      <workItem from="1768895608190" duration="26000" />
+      <workItem from="1769069653601" duration="1893000" />
+      <workItem from="1769133603606" duration="3594000" />
     </task>
     <task id="LOCAL-00001" summary="Import final dataset and preprocess for use sentence transformer">
       <option name="closed" value="true" />
@@ -183,7 +200,23 @@
       <option name="project" value="LOCAL" />
       <updated>1768282570768</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="update code to fine-tune selected model after comparing recall scores from base models">
+      <option name="closed" value="true" />
+      <created>1768533994440</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1768533994440</updated>
+    </task>
+    <task id="LOCAL-00010" summary="update code to save the fine_tuned model in local storage.">
+      <option name="closed" value="true" />
+      <created>1768661615289</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1768661615289</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -196,10 +229,12 @@
     <MESSAGE value="add a function to evaluate 3 sentence transformer models. and compair their recall scores to find the best model." />
     <MESSAGE value="fine-tuned all models and update the code for print before and after recall values." />
     <MESSAGE value="optimize sentence-transformer training by limiting training pairs" />
-    <option name="LAST_COMMIT_MESSAGE" value="optimize sentence-transformer training by limiting training pairs" />
+    <MESSAGE value="update code to fine-tune selected model after comparing recall scores from base models" />
+    <MESSAGE value="update code to save the fine_tuned model in local storage." />
+    <option name="LAST_COMMIT_MESSAGE" value="update code to save the fine_tuned model in local storage." />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/PythonProject$C4.coverage" NAME="C4 Coverage Results" MODIFIED="1768532001285" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/PythonProject$C4.coverage" NAME="C4 Coverage Results" MODIFIED="1769137488623" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/PythonProject$Component_4.coverage" NAME="Component_4 Coverage Results" MODIFIED="1765102801622" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
