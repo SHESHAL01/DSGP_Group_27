@@ -10,9 +10,6 @@ import numpy as np
 df = pd.read_csv("C:\\Users\\User\\Downloads\\IIT\\Year 2\\DSGP\\final_DS.csv")
 MODEL_PATH = "models/minilm_l6_fine_tuned"
 
-# print("rows:", len(df))
-# print("columns:", df.columns.tolist())
-
 #Preprocess text
 def parse_skills(s):
     # safe parse if it's like "['python','r']"
@@ -51,24 +48,39 @@ def evaluate_model(model, texts, skills, k=5):
     nn = NearestNeighbors(metric="cosine", n_neighbors=k + 1)
     nn.fit(embeddings)
 
-    hits = 0
+    recall_hits = 0
+    precision_sum = 0
+
     for i in range(len(texts)):
         _, indices = nn.kneighbors([embeddings[i]])
-        retrieved = indices[0][1:]
+        retrieved = indices[0][1:]  # exclude itself
         query_skills = set(skills[i])
+
+        relevant_count = 0
 
         for idx in retrieved:
             if query_skills & set(skills[idx]):
-                hits += 1
-                break
+                relevant_count += 1
 
-    return hits / len(texts)
+        # Recall@K (at least one relevant)
+        if relevant_count > 0:
+            recall_hits += 1
 
-# for model_name in models_to_test:
-#     print("\nEvaluating Model:", model_name)
-#     model = SentenceTransformer(model_name)
-#     recall = evaluate_model(model, texts, skills, k=5)
-#     print("Recall Score:", recall)
+        # Precision@K
+        precision_sum += relevant_count / k
+
+    recall_at_k = recall_hits / len(texts)
+    precision_at_k = precision_sum / len(texts)
+
+    return recall_at_k, precision_at_k
+
+
+for model_name in models_to_test:
+    print("\nEvaluating Model:", model_name)
+    model = SentenceTransformer(model_name)
+    recall, precision = evaluate_model(model, texts, skills, k=5)
+    print(f"Recall@5: {recall:.4f}")
+    print(f"Precision@5: {precision:.4f}")
 
 final_model = 'sentence-transformers/all-MiniLM-L6-v2'
 
@@ -112,12 +124,7 @@ def fine_tune_model():
     if len(train_examples) > MAX_PAIRS:
         train_examples = random.sample(train_examples, MAX_PAIRS)
 
-
-
-
-    print("\n======================================")
     print("Fine-tuning:", final_model)
-    print("======================================")
 
     # Load base model
     finetuned_model = SentenceTransformer(final_model)
@@ -144,7 +151,7 @@ def fine_tune_model():
 
 # Evaluate after fine-tuning
 print("\nEvaluating AFTER fine-tuning:", final_model)
-# -------- LOAD OR TRAIN FINE-TUNED MODEL --------
+
 if os.path.exists(MODEL_PATH):
     print("Loading fine-tuned model from disk...")
     fine_tuned_model = SentenceTransformer(MODEL_PATH)
@@ -152,9 +159,9 @@ else:
     print("Fine-tuned model not found. Training now...")
     fine_tuned_model = fine_tune_model()
 
-# -------- EVALUATE FINE-TUNED MODEL --------
+
 print("\nEvaluating AFTER fine-tuning:", final_model)
-recall_after = evaluate_model(fine_tuned_model, texts, skills, k=5)
+recall_after,precision_after = evaluate_model(fine_tuned_model, texts, skills, k=5)
 print("Recall Score after fine-tuning:", recall_after)
 
 chosen_model = SentenceTransformer("models/minilm_l6_fine_tuned")
@@ -169,7 +176,7 @@ def build_embedding_index(chosen_model, texts):
     np.save("course_embeddings.npy", embeddings)
     return embeddings
 
-if os.path.exists("job_embeddings.npy"):
-    job_embeddings = np.load("job_embeddings.npy")
+if os.path.exists("course_embeddings.npy"):
+    job_embeddings = np.load("course_embeddings.npy")
 else:
     job_embeddings = build_embedding_index(fine_tuned_model, texts)
