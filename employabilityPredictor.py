@@ -31,3 +31,5 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 
 df = pd.read_csv('encoded_skills_dataset.csv')
 print(df.head())
+
+
