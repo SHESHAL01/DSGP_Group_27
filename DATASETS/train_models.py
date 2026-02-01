@@ -200,3 +200,59 @@ y_pred_rf = best_rf.predict(X_test)
 print("Tuned Random Forest Accuracy:", accuracy_score(y_test, y_pred_rf))
 print(classification_report(y_test, y_pred_rf))
 
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import label_binarize
+from sklearn.metrics import roc_curve, auc
+from sklearn.multiclass import OneVsRestClassifier
+
+# Binarize the output for multiclass ROC-AUC
+classes = y.unique()
+y_test_bin = label_binarize(y_test, classes=classes)
+n_classes = y_test_bin.shape[1]
+
+# --- Logistic Regression ROC-AUC ---
+y_score_log = best_log.predict_proba(X_test)
+
+fpr_log = dict()
+tpr_log = dict()
+roc_auc_log = dict()
+
+for i in range(n_classes):
+    fpr_log[i], tpr_log[i], _ = roc_curve(y_test_bin[:, i], y_score_log[:, i])
+    roc_auc_log[i] = auc(fpr_log[i], tpr_log[i])
+
+plt.figure(figsize=(8, 6))
+for i in range(n_classes):
+    plt.plot(fpr_log[i], tpr_log[i], lw=2,
+             label=f"Class {classes[i]} (AUC = {roc_auc_log[i]:.2f})")
+
+plt.plot([0, 1], [0, 1], 'k--', lw=2)
+plt.title("ROC-AUC Curve - Logistic Regression")
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.legend(loc="lower right")
+plt.show()
+
+# --- Random Forest ROC-AUC ---
+y_score_rf = best_rf.predict_proba(X_test)
+
+fpr_rf = dict()
+tpr_rf = dict()
+roc_auc_rf = dict()
+
+for i in range(n_classes):
+    fpr_rf[i], tpr_rf[i], _ = roc_curve(y_test_bin[:, i], y_score_rf[:, i])
+    roc_auc_rf[i] = auc(fpr_rf[i], tpr_rf[i])
+
+plt.figure(figsize=(8, 6))
+for i in range(n_classes):
+    plt.plot(fpr_rf[i], tpr_rf[i], lw=2,
+             label=f"Class {classes[i]} (AUC = {roc_auc_rf[i]:.2f})")
+
+plt.plot([0, 1], [0, 1], 'k--', lw=2)
+plt.title("ROC-AUC Curve - Random Forest")
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.legend(loc="lower right")
+plt.show()
+
