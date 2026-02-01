@@ -256,3 +256,60 @@ plt.ylabel("True Positive Rate")
 plt.legend(loc="lower right")
 plt.show()
 
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+train_acc = []
+test_acc = []
+max_iter_list = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+
+for iters in max_iter_list:
+    lr = LogisticRegression(max_iter=iters, solver='lbfgs')
+    lr.fit(X_train, y_train)
+
+    # Track training accuracy
+    y_train_pred = lr.predict(X_train)
+    train_acc.append(accuracy_score(y_train, y_train_pred))
+
+    # Track testing accuracy
+    y_test_pred = lr.predict(X_test)
+    test_acc.append(accuracy_score(y_test, y_test_pred))
+
+plt.figure(figsize=(8, 6))
+plt.plot(max_iter_list, train_acc, label="Train Accuracy", marker='o')
+plt.plot(max_iter_list, test_acc, label="Test Accuracy", marker='o')
+plt.xlabel("Max Iterations")
+plt.ylabel("Accuracy")
+plt.title("Logistic Regression: Train vs Test Accuracy")
+plt.legend()
+plt.grid(True)
+plt.show()
+
+train_acc_rf = []
+test_acc_rf = []
+
+rf = RandomForestClassifier(n_estimators=10, warm_start=True, random_state=42, class_weight='balanced')
+
+for n_trees in range(10, 310, 10):
+    rf.n_estimators = n_trees
+    rf.fit(X_train, y_train)
+
+    # Track training accuracy
+    y_train_pred_rf = rf.predict(X_train)
+    train_acc_rf.append(accuracy_score(y_train, y_train_pred_rf))
+
+    # Track testing accuracy
+    y_test_pred_rf = rf.predict(X_test)
+    test_acc_rf.append(accuracy_score(y_test, y_test_pred_rf))
+
+plt.figure(figsize=(8, 6))
+plt.plot(range(10, 310, 10), train_acc_rf, label="Train Accuracy", marker='o')
+plt.plot(range(10, 310, 10), test_acc_rf, label="Test Accuracy", marker='o')
+plt.xlabel("Number of Trees")
+plt.ylabel("Accuracy")
+plt.title("Random Forest: Train vs Test Accuracy")
+plt.legend()
+plt.grid(True)
+plt.show()
+
