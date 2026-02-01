@@ -59,7 +59,17 @@ def word_count_analysis(df):
     print(f"\nAverage Words in Course Name: {word_counts.mean():.2f}")
 
 def feature_extraction(df):
-    pass
+    df_features = df.copy()
+
+    print("\nENCODING CATEGORICAL VARIABLES")
+
+    le_university = LabelEncoder()
+    le_degree = LabelEncoder()
+
+    df_features['University_Encoded'] = le_university.fit_transform(df_features['University'])
+    df_features['Degree_Encoded'] = le_degree.fit_transform(df_features['Degree Program'])
+
+    return df_features
 
 def main():
     data = pd.read_csv('data.csv')
@@ -75,7 +85,7 @@ def main():
     clean_data(df)
     DataAnalysis(df)
     word_count_analysis(df)
-    feature_extraction(df)
+    df = feature_extraction(df)
 
 
 if __name__ == '__main__':
