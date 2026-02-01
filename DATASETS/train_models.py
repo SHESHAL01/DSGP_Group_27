@@ -313,3 +313,54 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
+from sklearn.metrics import log_loss
+
+train_loss = []
+test_loss = []
+max_iter_list = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+
+for iters in max_iter_list:
+    lr = LogisticRegression(max_iter=iters, solver='lbfgs')
+    lr.fit(X_train, y_train)
+
+    # Predicted probabilities
+    y_train_prob = lr.predict_proba(X_train)
+    y_test_prob = lr.predict_proba(X_test)
+
+    # Compute log loss
+    train_loss.append(log_loss(y_train, y_train_prob))
+    test_loss.append(log_loss(y_test, y_test_prob))
+
+plt.figure(figsize=(8, 6))
+plt.plot(max_iter_list, train_loss, label="Train Loss", marker='o')
+plt.plot(max_iter_list, test_loss, label="Test Loss", marker='o')
+plt.xlabel("Max Iterations")
+plt.ylabel("Log Loss")
+plt.title("Logistic Regression: Train vs Test Loss")
+plt.legend()
+plt.grid(True)
+plt.show()
+
+train_loss_rf = []
+test_loss_rf = []
+
+rf = RandomForestClassifier(n_estimators=10, warm_start=True, random_state=42, class_weight='balanced')
+
+for n_trees in range(10, 310, 10):
+    rf.n_estimators = n_trees
+    rf.fit(X_train, y_train)
+
+    # Use 1 - accuracy as "loss"
+    train_loss_rf.append(1 - accuracy_score(y_train, rf.predict(X_train)))
+    test_loss_rf.append(1 - accuracy_score(y_test, rf.predict(X_test)))
+
+plt.figure(figsize=(8, 6))
+plt.plot(range(10, 310, 10), train_loss_rf, label="Train Loss", marker='o')
+plt.plot(range(10, 310, 10), test_loss_rf, label="Test Loss", marker='o')
+plt.xlabel("Number of Trees")
+plt.ylabel("Error (1 - Accuracy)")
+plt.title("Random Forest: Train vs Test Error")
+plt.legend()
+plt.grid(True)
+plt.show()
+
