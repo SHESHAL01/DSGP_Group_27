@@ -364,3 +364,57 @@ plt.legend()
 plt.grid(True)
 plt.show()
 
+#sensitivity check with PPV & NPV
+from sklearn.metrics import confusion_matrix
+import pandas as pd
+import numpy as np
+
+def multiclass_sensitivity_ppv_npv(y_true, y_pred, class_labels):
+    results = []
+
+    for cls in class_labels:
+        # One-vs-Rest transformation
+        y_true_bin = (y_true == cls).astype(int)
+        y_pred_bin = (y_pred == cls).astype(int)
+
+        tn, fp, fn, tp = confusion_matrix(y_true_bin, y_pred_bin).ravel()
+
+        sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0
+        specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
+        ppv = tp / (tp + fp) if (tp + fp) > 0 else 0
+        npv = tn / (tn + fn) if (tn + fn) > 0 else 0
+
+        results.append({
+            "Class": cls,
+            "Sensitivity (Recall)": sensitivity,
+            "Specificity": specificity,
+            "PPV (Precision)": ppv,
+            "NPV": npv
+        })
+
+    return pd.DataFrame(results)
+
+#Logistic Regression
+print("\nSensitivity / PPV / NPV - Logistic Regression\n")
+metrics_log = multiclass_sensitivity_ppv_npv(
+    y_test,
+    y_pred_log,
+    class_labels=classes
+)
+print(metrics_log)
+
+print("\nMacro Averages (LR):")
+print(metrics_log.mean(numeric_only=True))
+
+#Random Forest
+print("\nSensitivity / PPV / NPV - Random Forest\n")
+metrics_rf = multiclass_sensitivity_ppv_npv(
+    y_test,
+    y_pred_rf,
+    class_labels=classes
+)
+print(metrics_rf)
+
+print("\nMacro Averages (RF):")
+print(metrics_rf.mean(numeric_only=True))
+
