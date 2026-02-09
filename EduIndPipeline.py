@@ -102,7 +102,6 @@ def initialize_model():
 
     # Initialize tqdm for pandas
     tqdm.pandas(desc="Mapping Skills")
-
     # Load SBERT
     sbert_model = SentenceTransformer('all-MiniLM-L6-v2')
 
@@ -110,9 +109,13 @@ def initialize_model():
     print("Loading Word2Vec model (this may take a moment)...")
     w2v_model = api.load("glove-wiki-gigaword-50")
 
+    return sbert_model, w2v_model
+
+
 # --- SCORING FUNCTIONS ---
-def get_sbert_scores(course_text, skill_list):
+def get_sbert_scores(course_text, skill_list,sbert_model):
     """Returns top matches using Sentence-BERT cosine similarity"""
+
     # Encode the single course and all skills
     course_emb = sbert_model.encode(course_text, convert_to_tensor=True)
     skill_embs = sbert_model.encode(skill_list, convert_to_tensor=True)
@@ -140,7 +143,7 @@ def get_jaccard_scores(course_text, skill_list):
 
     return np.array(scores)
 
-def get_w2v_scores(course_text, skill_list):
+def get_w2v_scores(course_text, skill_list,w2v_model):
     """Returns scores using averaged Word2Vec embeddings"""
     def get_avg_vector(text):
         tokens = word_tokenize(text.lower())
@@ -205,10 +208,12 @@ def calculate_ranking_metrics(predicted, actual, k=5):
 def get_hybrid_top_skills(course_name, master_skill_list, weights, top_k=5):
     w_s, w_w, w_j = weights
 
+    sbert_model, w2v_model = initialize_model()
+
     # Use your existing functions (ensure these are defined in your notebook)
-    sbert_scores = get_sbert_scores(course_name, master_skill_list)
+    sbert_scores = get_sbert_scores(course_name, master_skill_list,sbert_model)
     jaccard_scores = get_jaccard_scores(course_name, master_skill_list) # Use your Jaccard logic
-    w2v_scores = get_w2v_scores(course_name, master_skill_list)
+    w2v_scores = get_w2v_scores(course_name, master_skill_list,w2v_model)
 
     # Min-Max Normalization to make scores comparable (0 to 1)
     def norm(s):
