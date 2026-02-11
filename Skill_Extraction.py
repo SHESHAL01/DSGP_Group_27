@@ -1,3 +1,5 @@
+import pandas as pd
+
 def skill_extraction(df):
     # Load and Process CSV
     # flatten the CSV into a single list of unique, lowercase skills

@@ -4,10 +4,11 @@ import gensim.downloader as api
 from sentence_transformers import SentenceTransformer, util
 from sklearn.metrics.pairwise import cosine_similarity
 from nltk.tokenize import word_tokenize
-import nltk
 from itertools import product
+from Skill_Extraction import skill_extraction
 
 # Convert set to list for indexing
+master_skill_set = skill_extraction()
 master_skill_list = list(master_skill_set)
 print(f"Indexing {len(master_skill_list)} skills for mapping...")
 
