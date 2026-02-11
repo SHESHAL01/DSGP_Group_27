@@ -4,18 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8935a41b-8f4d-44ac-ab51-539352ba9e07" name="Changes" comment="add function to create course embedding">
-      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/1_Pooling/config.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/README.md" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/config.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/config_sentence_transformers.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/model.safetensors" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/modules.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/sentence_bert_config.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/special_tokens_map.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/tokenizer.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/tokenizer_config.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/models/minilm_l6_fine_tuned/vocab.txt" afterDir="false" />
+    <list default="true" id="8935a41b-8f4d-44ac-ab51-539352ba9e07" name="Changes" comment="Added precision to evaluate models">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/C4.py" beforeDir="false" afterPath="$PROJECT_DIR$/C4.py" afterDir="false" />
     </list>
@@ -54,24 +43,24 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "Python.C4.executor": "Run",
-    "Python.Component_4.executor": "Run",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "Recommendation-System",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python.C4.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Component_4.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;#1 on Recommendation-System&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
-}]]></component>
+}</component>
   <component name="RunManager">
     <configuration name="C4" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
       <module name="PythonProject" />
@@ -137,7 +126,19 @@
       <workItem from="1769133603606" duration="4388000" />
       <workItem from="1769396178195" duration="3704000" />
       <workItem from="1769479172446" duration="62000" />
-      <workItem from="1769777751388" duration="1797000" />
+      <workItem from="1769777751388" duration="3995000" />
+      <workItem from="1769916173329" duration="3358000" />
+      <workItem from="1769998672961" duration="4927000" />
+      <workItem from="1770142858141" duration="3515000" />
+      <workItem from="1770204857079" duration="1524000" />
+      <workItem from="1770346949318" duration="8528000" />
+      <workItem from="1770380384637" duration="595000" />
+      <workItem from="1770404544605" duration="8238000" />
+      <workItem from="1770490745741" duration="3517000" />
+      <workItem from="1770568382353" duration="10272000" />
+      <workItem from="1770730355370" duration="6239000" />
+      <workItem from="1770764228426" duration="132000" />
+      <workItem from="1770818205226" duration="4420000" />
     </task>
     <task id="LOCAL-00001" summary="Import final dataset and preprocess for use sentence transformer">
       <option name="closed" value="true" />
@@ -227,7 +228,15 @@
       <option name="project" value="LOCAL" />
       <updated>1769138299845</updated>
     </task>
-    <option name="localTasksCounter" value="12" />
+    <task id="LOCAL-00012" summary="Added precision to evaluate models">
+      <option name="closed" value="true" />
+      <created>1769782655541</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1769782655541</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -243,10 +252,11 @@
     <MESSAGE value="update code to fine-tune selected model after comparing recall scores from base models" />
     <MESSAGE value="update code to save the fine_tuned model in local storage." />
     <MESSAGE value="add function to create course embedding" />
-    <option name="LAST_COMMIT_MESSAGE" value="add function to create course embedding" />
+    <MESSAGE value="Added precision to evaluate models" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added precision to evaluate models" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/PythonProject$C4.coverage" NAME="C4 Coverage Results" MODIFIED="1769781449576" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/PythonProject$C4.coverage" NAME="C4 Coverage Results" MODIFIED="1770819317216" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/PythonProject$Component_4.coverage" NAME="Component_4 Coverage Results" MODIFIED="1765102801622" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

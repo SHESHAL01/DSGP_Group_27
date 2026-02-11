@@ -3,88 +3,54 @@ import pandas as pd
 import ast
 from sentence_transformers import SentenceTransformer, InputExample, losses
 from sklearn.neighbors import NearestNeighbors
+from sklearn.metrics import precision_recall_curve, average_precision_score
 from torch.utils.data import DataLoader
-import os
 import numpy as np
+import matplotlib.pyplot as plt
 
-df = pd.read_csv("C:\\Users\\User\\Downloads\\IIT\\Year 2\\DSGP\\final_DS.csv")
-MODEL_PATH = "models/minilm_l6_fine_tuned"
+# ------------------- LOAD DATA -------------------
+df = pd.read_csv(
+    "C:\\Users\\User\\Downloads\\IIT\\Year 2\\DSGP\\final_DS.csv"
+)
 
-#Preprocess text
+BASE_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+
+# ------------------- PREPROCESSING -------------------
 def parse_skills(s):
-    # safe parse if it's like "['python','r']"
     try:
         parsed = ast.literal_eval(s)
         if isinstance(parsed, (list, tuple)):
-            return [str(x).strip().lower() for x in parsed if str(x).strip()!='']
+            return [str(x).strip().lower() for x in parsed if str(x).strip()]
     except Exception:
-        # fallback: split on comma
-        if pd.isna(s): return []
-        return [tok.strip().lower() for tok in str(s).split(',') if tok.strip()!='']
+        if pd.isna(s):
+            return []
+        return [tok.strip().lower() for tok in str(s).split(",") if tok.strip()]
     return []
 
-df['skills_list'] = df['Skills'].fillna('[]').apply(parse_skills)
-# combined textual field (title + skills)
-df['combined_text'] = df.apply(lambda r: (str(r.get('Title','')) + ' | ' + ' '.join(r['skills_list'])), axis=1)
+df["skills_list"] = df["Skills"].fillna("[]").apply(parse_skills)
 
-models_to_test = [
-    'sentence-transformers/all-MiniLM-L6-v2',
-    'sentence-transformers/all-MiniLM-L12-v2',
-    'sentence-transformers/all-mpnet-base-v2'
-]
+df["combined_text"] = df.apply(
+    lambda r: f"{str(r.get('Title',''))} | {' '.join(r['skills_list'])}",
+    axis=1
+)
 
 texts = df["combined_text"].tolist()
 skills = df["skills_list"].tolist()
 
-def evaluate_model(model, texts, skills, k=5):
+# ------------------- EXPERIMENT SETTINGS -------------------
+EXPERIMENTS = [
+    {"epochs": 1, "warmup_ratio": 0.05},
+    {"epochs": 2, "warmup_ratio": 0.05},
+    {"epochs": 3, "warmup_ratio": 0.05},
+]
 
-    embeddings = model.encode(
-        texts,
-        convert_to_numpy=True,
-        normalize_embeddings=True,
-        show_progress_bar=True
-    )
+MAX_PAIRS = 100000
+BATCH_SIZE = 16
+NEGATIVE_SAMPLE_PROB = 0.05
 
-    nn = NearestNeighbors(metric="cosine", n_neighbors=k + 1)
-    nn.fit(embeddings)
+# ------------------- FINE-TUNING FUNCTION -------------------
+def fine_tune_model(epochs, warmup_ratio):
 
-    recall_hits = 0
-    precision_sum = 0
-
-    for i in range(len(texts)):
-        _, indices = nn.kneighbors([embeddings[i]])
-        retrieved = indices[0][1:]  # exclude itself
-        query_skills = set(skills[i])
-
-        relevant_count = 0
-
-        for idx in retrieved:
-            if query_skills & set(skills[idx]):
-                relevant_count += 1
-
-        # Recall@K (at least one relevant)
-        if relevant_count > 0:
-            recall_hits += 1
-
-        # Precision@K
-        precision_sum += relevant_count / k
-
-    recall_at_k = recall_hits / len(texts)
-    precision_at_k = precision_sum / len(texts)
-
-    return recall_at_k, precision_at_k
-
-
-for model_name in models_to_test:
-    print("\nEvaluating Model:", model_name)
-    model = SentenceTransformer(model_name)
-    recall, precision = evaluate_model(model, texts, skills, k=5)
-    print(f"Recall@5: {recall:.4f}")
-    print(f"Precision@5: {precision:.4f}")
-
-final_model = 'sentence-transformers/all-MiniLM-L6-v2'
-
-def fine_tune_model():
     train_examples = []
 
     for i in range(len(df)):
@@ -94,89 +60,133 @@ def fine_tune_model():
 
             shared = skills_i & skills_j
 
-            # Positive pair
-            if len(shared) > 0:
+            if shared:
                 train_examples.append(
                     InputExample(
-                        texts=[
-                            df.loc[i, "combined_text"],
-                            df.loc[j, "combined_text"]
-                        ],
+                        texts=[df.loc[i, "combined_text"],
+                               df.loc[j, "combined_text"]],
                         label=1.0
                     )
                 )
-
-            # Negative pair (random sampling to avoid imbalance)
-            elif random.random() < 0.05:
+            elif random.random() < NEGATIVE_SAMPLE_PROB:
                 train_examples.append(
                     InputExample(
-                        texts=[
-                            df.loc[i, "combined_text"],
-                            df.loc[j, "combined_text"]
-                        ],
+                        texts=[df.loc[i, "combined_text"],
+                               df.loc[j, "combined_text"]],
                         label=0.0
                     )
                 )
 
-    # -------- LIMIT TRAINING PAIRS (IMPORTANT) --------
-    MAX_PAIRS = 2000
-
     if len(train_examples) > MAX_PAIRS:
         train_examples = random.sample(train_examples, MAX_PAIRS)
 
-    print("Fine-tuning:", final_model)
+    print(f"Training with {len(train_examples)} pairs")
 
-    # Load base model
-    finetuned_model = SentenceTransformer(final_model)
+    model = SentenceTransformer(BASE_MODEL)
 
-    # DataLoader
     train_dataloader = DataLoader(
         train_examples,
         shuffle=True,
-        batch_size=16
+        batch_size=BATCH_SIZE
     )
 
-    # Loss
-    train_loss = losses.CosineSimilarityLoss(finetuned_model)
+    train_loss = losses.CosineSimilarityLoss(model)
 
-    # Fine-tune
-    finetuned_model.fit(
+    total_steps = len(train_dataloader) * epochs
+    warmup_steps = int(total_steps * warmup_ratio)
+
+    model.fit(
         train_objectives=[(train_dataloader, train_loss)],
-        epochs=1,
-        warmup_steps=100,
+        epochs=epochs,
+        warmup_steps=warmup_steps,
         show_progress_bar=True
     )
-    finetuned_model.save("models/minilm_l6_fine_tuned")
-    return finetuned_model
 
-# Evaluate after fine-tuning
-print("\nEvaluating AFTER fine-tuning:", final_model)
+    return model, warmup_steps
 
-if os.path.exists(MODEL_PATH):
-    print("Loading fine-tuned model from disk...")
-    fine_tuned_model = SentenceTransformer(MODEL_PATH)
-else:
-    print("Fine-tuned model not found. Training now...")
-    fine_tuned_model = fine_tune_model()
+# ------------------- PR CURVE FUNCTION -------------------
+def get_pr_curve_data(model, texts, skills, sample_size=3000):
 
-
-print("\nEvaluating AFTER fine-tuning:", final_model)
-recall_after,precision_after = evaluate_model(fine_tuned_model, texts, skills, k=5)
-print("Recall Score after fine-tuning:", recall_after)
-
-chosen_model = SentenceTransformer("models/minilm_l6_fine_tuned")
-
-def build_embedding_index(chosen_model, texts):
-    embeddings = chosen_model.encode(
+    embeddings = model.encode(
         texts,
         convert_to_numpy=True,
         normalize_embeddings=True,
         show_progress_bar=True
     )
-    np.save("course_embeddings.npy", embeddings)
-    return embeddings
 
-if os.path.exists("course_embeddings.npy"):
-    job_embeddings = np.load("course_embeddings.npy")
-else:
-    job_embeddings = build_embedding_index(fine_tuned_model, texts)
+    y_true = []
+    y_scores = []
+    n = len(texts)
+
+    for _ in range(sample_size):
+        i = random.randint(0, n - 1)
+        j = random.randint(0, n - 1)
+
+        if i == j:
+            continue
+
+        shared = set(skills[i]) & set(skills[j])
+        label = 1 if shared else 0
+
+        score = np.dot(embeddings[i], embeddings[j])
+
+        y_true.append(label)
+        y_scores.append(score)
+
+    precision, recall, _ = precision_recall_curve(y_true, y_scores)
+    ap_score = average_precision_score(y_true, y_scores)
+
+    return precision, recall, ap_score
+
+# ------------------- RUN EXPERIMENTS -------------------
+experiment_results = {}
+
+for exp in EXPERIMENTS:
+
+    epochs = exp["epochs"]
+    warmup_ratio = exp["warmup_ratio"]
+
+    print("\n=================================")
+    print(f"Running Experiment: Epochs={epochs}")
+    print("=================================")
+
+    model, warmup_steps = fine_tune_model(epochs, warmup_ratio)
+
+    precision, recall, ap_score = get_pr_curve_data(model, texts, skills)
+
+    experiment_results[f"E{epochs}"] = {
+        "precision": precision,
+        "recall": recall,
+        "ap": ap_score,
+        "warmup": warmup_steps
+    }
+
+    print(f"AP Score: {ap_score:.4f}")
+    print(f"Warmup Steps: {warmup_steps}")
+
+# ------------------- PLOT ALL PR CURVES -------------------
+plt.figure()
+
+for label, data in experiment_results.items():
+    plt.plot(
+        data["recall"],
+        data["precision"],
+        label=f"{label} | AP={data['ap']:.3f}"
+    )
+
+plt.xlabel("Recall")
+plt.ylabel("Precision")
+plt.title("Precision-Recall Curve Comparison")
+plt.legend()
+plt.show()
+
+# ------------------- PRINT BEST MODEL -------------------
+best_model_label = max(
+    experiment_results,
+    key=lambda x: experiment_results[x]["ap"]
+)
+
+print("\n=================================")
+print(f"Best Model: {best_model_label}")
+print(f"Best AP: {experiment_results[best_model_label]['ap']:.4f}")
+print("=================================")
