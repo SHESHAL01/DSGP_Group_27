@@ -418,3 +418,33 @@ print(metrics_rf)
 print("\nMacro Averages (RF):")
 print(metrics_rf.mean(numeric_only=True))
 
+#sensitivity check plots
+
+import matplotlib.pyplot as plt
+
+metrics_log.set_index("Class")[["Sensitivity (Recall)", "PPV (Precision)", "NPV"]].plot(
+    kind="bar",
+    figsize=(10, 6)
+)
+
+plt.title("Sensitivity / PPV / NPV - Logistic Regression")
+plt.ylabel("Score")
+plt.ylim(0, 1.05)
+plt.xticks(rotation=30)
+plt.grid(axis="y")
+plt.tight_layout()
+plt.show()
+
+metrics_rf.set_index("Class")[["Sensitivity (Recall)", "PPV (Precision)", "NPV"]].plot(
+    kind="bar",
+    figsize=(10, 6)
+)
+
+plt.title("Sensitivity / PPV / NPV - Random Forest")
+plt.ylabel("Score")
+plt.ylim(0, 1.05)
+plt.xticks(rotation=30)
+plt.grid(axis="y")
+plt.tight_layout()
+plt.show()
+
