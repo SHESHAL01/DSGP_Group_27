@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SkillSync - Recommendations</title>
+    <link rel="stylesheet" href="rcmd.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+    <!-- HEADER -->
+    <header class="header">
+        <div class="logo">
+            <img src="Skill Sync Logo.png" alt="SkillSync Logo">
+        </div>
+
+        <nav class="navbar">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="#">Explore</a></li>
+                <li><a href="recommendation.html">Recommendations</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- MAIN -->
+    <main class="container">
+
+        <section class="description">
+            <h2>Job Recommendation Engine</h2>
+            <p>Enter your skills and get AI-powered job matches.</p>
+        </section>
+
+        <!-- TOP SECTION -->
+        <section class="top-layout">
+
+            <!-- USER INPUT -->
+            <div class="input-section">
+
+                <div class="input-group">
+                    <label>Preferred Job Role</label>
+                    <select>
+                        <option>Frontend Developer</option>
+                        <option>Backend Developer</option>
+                        <option>Data Scientist</option>
+                        <option>Machine Learning Engineer</option>
+                        <option>UI/UX Designer</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <label>Learned Skills</label>
+                    <textarea placeholder="Example: Python, SQL, Machine Learning"></textarea>
+                </div>
+
+                <button class="btn-primary">Get Recommendations</button>
+
+            </div>
+
+            <!-- SKILL MISMATCH -->
+            <div class="analysis-card">
+                <h3>Skill Mismatch</h3>
+                <ul>
+                    <li>React</li>
+                    <li>Docker</li>
+                    <li>AWS</li>
+                </ul>
+            </div>
+
+            <!-- MODEL PERFORMANCE -->
+            <div class="analysis-card">
+                <h3>Model Performance</h3>
+                <p>Precision: 0.82</p>
+                <p>Recall: 0.79</p>
+                <p>F1 Score: 0.80</p>
+            </div>
+
+        </section>
+
+        <!-- RECOMMENDATIONS -->
+        <section class="recommendations">
+            <h3>Top Matches</h3>
+
+            <div class="job-card">
+                <h4>Machine Learning Engineer</h4>
+                <p>Match Score: 87%</p>
+            </div>
+
+            <div class="job-card">
+                <h4>Data Analyst</h4>
+                <p>Match Score: 79%</p>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        © 2026 SkillSync | All Rights Reserved
+    </footer>
+
+</body>
+</html>
