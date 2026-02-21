@@ -701,3 +701,49 @@ threshold_results_rf = threshold_analysis(
     y_test,
     "Random Forest"
 )
+import matplotlib.pyplot as plt
+import pandas as pd
+import numpy as np
+
+# Example results from your threshold optimization
+classes = ["Cloud Engineer", "Data Analyst", "Data Scientist", "Machine Learning Engineer", "Software Engineer"]
+
+youden_lr = [0.901, 0.981, 0.946, 0.905, 0.920]
+youden_rf = [0.953, 0.979, 0.972, 0.917, 0.935]
+
+df = pd.DataFrame({
+    "Class": classes,
+    "Logistic Regression": youden_lr,
+    "Random Forest": youden_rf
+})
+
+# Plotting
+x = np.arange(len(classes))  # the label locations
+width = 0.35  # width of the bars
+
+fig, ax = plt.subplots(figsize=(10,6))
+rects1 = ax.bar(x - width/2, df["Logistic Regression"], width, label='Logistic Regression', color="#1f77b4")
+rects2 = ax.bar(x + width/2, df["Random Forest"], width, label='Random Forest', color="#ff7f0e")
+
+# Add labels and title
+ax.set_ylabel("Youden Index")
+ax.set_xlabel("Job Role")
+ax.set_title("Youden Index per Class: Logistic Regression vs Random Forest")
+ax.set_xticks(x)
+ax.set_xticklabels(df["Class"], rotation=30)
+ax.set_ylim(0, 1.05)
+ax.legend()
+ax.grid(axis='y', linestyle='--', alpha=0.7)
+
+# Annotate bars with values
+for rects in [rects1, rects2]:
+    for rect in rects:
+        height = rect.get_height()
+        ax.annotate(f'{height:.3f}',
+                    xy=(rect.get_x() + rect.get_width() / 2, height),
+                    xytext=(0,3),
+                    textcoords="offset points",
+                    ha='center', va='bottom', fontsize=9)
+
+plt.tight_layout()
+plt.show()
