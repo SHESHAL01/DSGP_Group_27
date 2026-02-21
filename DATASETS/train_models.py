@@ -448,3 +448,256 @@ plt.grid(axis="y")
 plt.tight_layout()
 plt.show()
 
+from sklearn.metrics import confusion_matrix
+import numpy as np
+import matplotlib.pyplot as plt
+
+thresholds = np.linspace(0, 1, 50)
+
+# Get probabilities
+prob_log = best_log.predict_proba(X_test)
+
+for target_class in best_log.classes_:
+
+    print(f"\nThreshold Analysis - Logistic Regression: {target_class}")
+
+    class_index = list(best_log.classes_).index(target_class)
+    prob_target = prob_log[:, class_index]
+
+    y_true_binary = (y_test == target_class).astype(int)
+
+    sens = []
+    spec = []
+
+    for t in thresholds:
+        y_pred_binary = (prob_target >= t).astype(int)
+
+        tn, fp, fn, tp = confusion_matrix(y_true_binary, y_pred_binary).ravel()
+
+        sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0
+        specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
+
+        sens.append(sensitivity)
+        spec.append(specificity)
+
+    plt.figure(figsize=(7,5))
+    plt.plot(thresholds, sens, label="Sensitivity")
+    plt.plot(thresholds, spec, label="Specificity")
+    plt.title(f"LR Threshold Tradeoff - {target_class}")
+    plt.xlabel("Decision Threshold")
+    plt.ylabel("Score")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+prob_rf = best_rf.predict_proba(X_test)
+
+for target_class in best_rf.classes_:
+
+    print(f"\nThreshold Analysis - Random Forest: {target_class}")
+
+    class_index = list(best_rf.classes_).index(target_class)
+    prob_target = prob_rf[:, class_index]
+
+    y_true_binary = (y_test == target_class).astype(int)
+
+    sens = []
+    spec = []
+
+    for t in thresholds:
+        y_pred_binary = (prob_target >= t).astype(int)
+
+        tn, fp, fn, tp = confusion_matrix(y_true_binary, y_pred_binary).ravel()
+
+        sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0
+        specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
+
+        sens.append(sensitivity)
+        spec.append(specificity)
+
+    plt.figure(figsize=(7,5))
+    plt.plot(thresholds, sens, label="Sensitivity")
+    plt.plot(thresholds, spec, label="Specificity")
+    plt.title(f"RF Threshold Tradeoff - {target_class}")
+    plt.xlabel("Decision Threshold")
+    plt.ylabel("Score")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+from sklearn.metrics import confusion_matrix
+import numpy as np
+import matplotlib.pyplot as plt
+
+thresholds = np.linspace(0, 1, 50)
+prob_log = best_log.predict_proba(X_test)
+
+plt.figure(figsize=(8,6))
+
+for target_class in best_log.classes_:
+
+    class_index = list(best_log.classes_).index(target_class)
+    prob_target = prob_log[:, class_index]
+    y_true_binary = (y_test == target_class).astype(int)
+
+    sens = []
+    spec = []
+
+    for t in thresholds:
+        y_pred_binary = (prob_target >= t).astype(int)
+        tn, fp, fn, tp = confusion_matrix(y_true_binary, y_pred_binary).ravel()
+
+        sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0
+        specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
+
+        sens.append(sensitivity)
+        spec.append(specificity)
+
+    balanced_score = np.array(sens) + np.array(spec)
+    best_idx = np.argmax(balanced_score)
+
+    plt.scatter(sens[best_idx], spec[best_idx], label=target_class)
+
+plt.xlabel("Sensitivity")
+plt.ylabel("Specificity")
+plt.title("Logistic Regression - Optimal Sensitivity vs Specificity per Class")
+plt.legend()
+plt.grid(True)
+plt.show()
+
+prob_rf = best_rf.predict_proba(X_test)
+
+plt.figure(figsize=(8,6))
+
+for target_class in best_rf.classes_:
+
+    class_index = list(best_rf.classes_).index(target_class)
+    prob_target = prob_rf[:, class_index]
+    y_true_binary = (y_test == target_class).astype(int)
+
+    sens = []
+    spec = []
+
+    for t in thresholds:
+        y_pred_binary = (prob_target >= t).astype(int)
+        tn, fp, fn, tp = confusion_matrix(y_true_binary, y_pred_binary).ravel()
+
+        sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0
+        specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
+
+        sens.append(sensitivity)
+        spec.append(specificity)
+
+    balanced_score = np.array(sens) + np.array(spec)
+    best_idx = np.argmax(balanced_score)
+
+    plt.scatter(sens[best_idx], spec[best_idx], label=target_class)
+
+plt.xlabel("Sensitivity")
+plt.ylabel("Specificity")
+plt.title("Random Forest - Optimal Sensitivity vs Specificity per Class")
+plt.legend()
+plt.grid(True)
+plt.show()
+# ============================================================
+# Optimal Threshold per Class (Youden's Index)
+# Compare Default 0.5 vs Optimized Threshold
+# ============================================================
+
+import numpy as np
+import pandas as pd
+from sklearn.metrics import confusion_matrix
+
+def threshold_analysis(model, X_test, y_test, model_name):
+
+    print(f"\n{'='*60}")
+    print(f"Threshold Optimization Results - {model_name}")
+    print(f"{'='*60}\n")
+
+    classes = model.classes_
+    prob = model.predict_proba(X_test)
+
+    thresholds = np.linspace(0, 1, 101)
+
+    results = []
+
+    for i, cls in enumerate(classes):
+
+        y_true_binary = (y_test == cls).astype(int)
+        prob_target = prob[:, i]
+
+        best_youden = -1
+        best_threshold = 0.5
+        best_sens = 0
+        best_spec = 0
+
+        # ----- Search best threshold -----
+        for t in thresholds:
+
+            y_pred_binary = (prob_target >= t).astype(int)
+
+            tn, fp, fn, tp = confusion_matrix(
+                y_true_binary,
+                y_pred_binary
+            ).ravel()
+
+            sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0
+            specificity = tn / (tn + fp) if (tn + fp) > 0 else 0
+
+            youden = sensitivity + specificity - 1
+
+            if youden > best_youden:
+                best_youden = youden
+                best_threshold = t
+                best_sens = sensitivity
+                best_spec = specificity
+
+        # ----- Default threshold (0.5) -----
+        y_pred_default = (prob_target >= 0.5).astype(int)
+        tn, fp, fn, tp = confusion_matrix(
+            y_true_binary,
+            y_pred_default
+        ).ravel()
+
+        sens_default = tp / (tp + fn) if (tp + fn) > 0 else 0
+        spec_default = tn / (tn + fp) if (tn + fp) > 0 else 0
+
+        results.append({
+            "Class": cls,
+
+            "Default Threshold": 0.5,
+            "Default Sensitivity": round(sens_default, 3),
+            "Default Specificity": round(spec_default, 3),
+
+            "Best Threshold": round(best_threshold, 3),
+            "Optimized Sensitivity": round(best_sens, 3),
+            "Optimized Specificity": round(best_spec, 3),
+
+            "Youden Index": round(best_youden, 3)
+        })
+
+    df_results = pd.DataFrame(results)
+    print(df_results)
+
+    return df_results
+
+
+# ==========================
+# Run for Logistic Regression
+# ==========================
+threshold_results_log = threshold_analysis(
+    best_log,
+    X_test,
+    y_test,
+    "Logistic Regression"
+)
+
+# ==========================
+# Run for Random Forest
+# ==========================
+threshold_results_rf = threshold_analysis(
+    best_rf,
+    X_test,
+    y_test,
+    "Random Forest"
+)
