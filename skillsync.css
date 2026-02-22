@@ -84,8 +84,9 @@ body {
 }
 
 .card:hover {
+    color: #00e0c6;
     transform: translateY(-8px);
-    background: rgba(0, 224, 198, 0.2);
+    background: rgba(255, 255, 255, 0.2);
 }
 
 /* Footer */
