@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8935a41b-8f4d-44ac-ab51-539352ba9e07" name="Changes" comment="Added precision to evaluate models">
+    <list default="true" id="8935a41b-8f4d-44ac-ab51-539352ba9e07" name="Changes" comment="added ROC AUC curve plot, F1 scores">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/C4.py" beforeDir="false" afterPath="$PROJECT_DIR$/C4.py" afterDir="false" />
     </list>
@@ -138,7 +138,23 @@
       <workItem from="1770568382353" duration="10272000" />
       <workItem from="1770730355370" duration="6239000" />
       <workItem from="1770764228426" duration="132000" />
-      <workItem from="1770818205226" duration="4420000" />
+      <workItem from="1770818205226" duration="6513000" />
+      <workItem from="1770883388029" duration="1440000" />
+      <workItem from="1770913404307" duration="12409000" />
+      <workItem from="1771077001476" duration="21044000" />
+      <workItem from="1771161433607" duration="13507000" />
+      <workItem from="1771331291623" duration="2775000" />
+      <workItem from="1771379185559" duration="389000" />
+      <workItem from="1771380841512" duration="315000" />
+      <workItem from="1771418388676" duration="10340000" />
+      <workItem from="1771506461113" duration="13103000" />
+      <workItem from="1771569661548" duration="8075000" />
+      <workItem from="1771590067838" duration="2994000" />
+      <workItem from="1771598016829" duration="3701000" />
+      <workItem from="1771607590053" duration="29378000" />
+      <workItem from="1771735994985" duration="3702000" />
+      <workItem from="1771756902211" duration="21665000" />
+      <workItem from="1772037216290" duration="1396000" />
     </task>
     <task id="LOCAL-00001" summary="Import final dataset and preprocess for use sentence transformer">
       <option name="closed" value="true" />
@@ -236,7 +252,23 @@
       <option name="project" value="LOCAL" />
       <updated>1769782655541</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="added a function to plot PR curves">
+      <option name="closed" value="true" />
+      <created>1770829980403</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1770829980403</updated>
+    </task>
+    <task id="LOCAL-00014" summary="added ROC AUC curve plot, F1 scores">
+      <option name="closed" value="true" />
+      <created>1771380980669</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1771380980669</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -253,10 +285,12 @@
     <MESSAGE value="update code to save the fine_tuned model in local storage." />
     <MESSAGE value="add function to create course embedding" />
     <MESSAGE value="Added precision to evaluate models" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added precision to evaluate models" />
+    <MESSAGE value="added a function to plot PR curves" />
+    <MESSAGE value="added ROC AUC curve plot, F1 scores" />
+    <option name="LAST_COMMIT_MESSAGE" value="added ROC AUC curve plot, F1 scores" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/PythonProject$C4.coverage" NAME="C4 Coverage Results" MODIFIED="1770819317216" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/PythonProject$C4.coverage" NAME="C4 Coverage Results" MODIFIED="1771756912721" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/PythonProject$Component_4.coverage" NAME="Component_4 Coverage Results" MODIFIED="1765102801622" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
