@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>SkillSync - Recommendations</title>
     <link rel="stylesheet" href="rcmd.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
+
 <body>
 
-    <!-- HEADER -->
     <header class="header">
         <div class="logo">
             <img src="Skill Sync Logo.png" alt="SkillSync Logo">
@@ -16,7 +17,7 @@
 
         <nav class="navbar">
             <ul>
-                <li><a href="index.html">Home</a></li>
+                <li><a href="skillsync.html">Home</a></li>
                 <li><a href="#">Explore</a></li>
                 <li><a href="recommendation.html">Recommendations</a></li>
                 <li><a href="#">Contact</a></li>
@@ -24,38 +25,21 @@
         </nav>
     </header>
 
-    <!-- MAIN -->
     <main class="container">
 
         <section class="description">
             <h2>Job Recommendation Engine</h2>
-            <p>"Unlock your potential - discover missing skills and gain the courses that fuel your success.".</p>
+            <p>"Unlock your potential - discover missing skills and gain the courses that fuel your success."</p>
         </section>
 
-        <!-- TOP SECTION -->
+        <!-- 3 CARDS IN ONE ROW -->
         <section class="top-layout">
 
-            <!-- USER INPUT -->
-            <div class="input-section">
-
-                <div class="input-group">
-                    <label>Preferred Job Role</label>
-                    <select>
-                        <option>Data Scientist</option>
-                        <option>Data Analyst</option>
-                        <option>Software Engineer</option>
-                        <option>Machine Learning Engineer</option>
-                        <option>Cloud Engineer</option>
-                    </select>
-                </div>
-
-                <div class="input-group">
-                    <label>Learned Skills</label>
-                    <textarea placeholder="Example: Python, SQL, Machine Learning"></textarea>
-                </div>
-
-                <button class="btn-primary">Get Recommendations</button>
-
+            <!-- USER PROFILE CARD -->
+            <div class="analysis-card">
+                <h3>Your Profile</h3>
+                <p><strong>Preferred Job:</strong> Software Engineer</p>
+                <p><strong>Your Skills:</strong> Python, JavaScript, SQL</p>
             </div>
 
             <!-- SKILL MISMATCH -->
@@ -71,9 +55,9 @@
             <!-- MODEL PERFORMANCE -->
             <div class="analysis-card">
                 <h3>Model Performance</h3>
-                <p>Precision: 0.82</p>
-                <p>Recall: 0.79</p>
-                <p>F1 Score: 0.80</p>
+                <p><span>Precision</span> <span>0.82</span></p>
+                <p><span>Recall</span> <span>0.79</span></p>
+                <p><span>F1 Score</span> <span>0.80</span></p>
             </div>
 
         </section>
@@ -88,7 +72,7 @@
             </div>
 
             <div class="job-card">
-                <h4>Mathematics for Data science</h4>
+                <h4>Mathematics for Data Science</h4>
                 <p>Match Score: 79%</p>
             </div>
 
@@ -96,7 +80,6 @@
 
     </main>
 
-    <!-- FOOTER -->
     <footer class="footer">
         © 2026 SkillSync | All Rights Reserved
     </footer>
