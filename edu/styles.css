@@ -122,6 +122,10 @@ body {
     align-items: center;
     gap: var(--spacing-md);
 }
+.logo img {
+    height: 60px;
+    filter: brightness(1.2);
+}
 
 .logo-text {
     font-weight: 700;
