@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillSync - Education-Industry Alignment Analysis</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="40" height="40" rx="8" fill="#1e5a7d"/>
+                        <path d="M20 10 L30 15 L30 25 L20 30 L10 25 L10 15 Z" fill="#2dd4bf" opacity="0.8"/>
+                        <circle cx="20" cy="20" r="4" fill="#fff"/>
+                    </svg>
+                    <span class="logo-text">SkillSync</span>
+                </div>
+            </div>
+            <div class="nav-links">
+                <a href="#" class="nav-link">Home</a>
+                <a href="#" class="nav-link">Explore</a>
+                <a href="#" class="nav-link active">Recommendations</a>
+                <a href="#" class="nav-link">Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Header -->
+            <header class="page-header">
+                <div class="header-content">
+                    <div class="header-label">INSIGHTS</div>
+                    <h1 class="page-title">Education–Industry Alignment Analysis</h1>
+                    <p class="page-subtitle">Automated analysis report based on latest curriculum data and market trends.</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                        </svg>
+                        Refresh Data
+                    </button>
+                    <button class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Export Report
+                    </button>
+                </div>
+            </header>
+
+            <!-- Chart Section -->
+            <section class="chart-section">
+                <div class="section-header">
+                    <div class="section-number">1</div>
+                    <div>
+                        <h2 class="section-title">Curriculum Relevance Score</h2>
+                        <p class="section-subtitle">Comparison against market benchmarks and competitors</p>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="alignmentChart"></canvas>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">University A (Current)</div>
+                        <div class="stat-value">72%</div>
+                        <div class="stat-desc">Market Alignment</div>
+                    </div>
+                    <div class="stat-card highlight">
+                        <div class="stat-label">Market Benchmark</div>
+                        <div class="stat-value">85%</div>
+                        <div class="stat-desc">Market Alignment</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Competitor B</div>
+                        <div class="stat-value">68%</div>
+                        <div class="stat-desc">Market Alignment</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Insights Section -->
+            <section class="insights-section">
+                <div class="section-header">
+                    <div class="section-number">2</div>
+                    <div>
+                        <h2 class="section-title">Insights & Recommendations</h2>
+                        <p class="section-subtitle">Actionable steps to improve curriculum alignment</p>
+                    </div>
+                </div>
+
+                <div class="insights-grid">
+                    <!-- Skill Gap 1 -->
+                    <div class="insight-card skill-gap">
+                        <div class="insight-header">
+                            <div class="insight-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
+                            </div>
+                            <span class="insight-badge skill-gap-badge">Skill Gap</span>
+                        </div>
+                        <h3 class="insight-title">Missing Modern Framework Coverage</h3>
+                        <p class="insight-description">Popular frameworks like React, Angular, and Vue.js are highly demanded in the job market but are not present in the current curriculum.</p>
+                    </div>
+
+                    <!-- Skill Gap 2 -->
+                    <div class="insight-card skill-gap">
+                        <div class="insight-header">
+                            <div class="insight-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
+                            </div>
+                            <span class="insight-badge skill-gap-badge">Skill Gap</span>
+                        </div>
+                        <h3 class="insight-title">Limited Cloud Technology Training</h3>
+                        <p class="insight-description">Cloud computing skills (AWS, Azure, Google Cloud) are increasingly important but underrepresented in the curriculum.</p>
+                    </div>
+
+                    <!-- Strength -->
+                    <div class="insight-card strength">
+                        <div class="insight-header">
+                            <div class="insight-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                                </svg>
+                            </div>
+                            <span class="insight-badge strength-badge">Strength</span>
+                        </div>
+                        <h3 class="insight-title">Strong Foundational Programming</h3>
+                        <p class="insight-description">Core programming languages like Python and JavaScript are well-covered and align with market demand.</p>
+                    </div>
+
+                    <!-- Recommendation 1 -->
+                    <div class="insight-card recommendation">
+                        <div class="insight-header">
+                            <div class="insight-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                </svg>
+                            </div>
+                            <span class="insight-badge recommendation-badge">Recommendation</span>
+                        </div>
+                        <h3 class="insight-title">Add Modern Web Development Module</h3>
+                        <p class="insight-description">Include a dedicated module covering React, Node.js, and modern web development frameworks to improve alignment with current job market trends by approximately 15%.</p>
+                    </div>
+
+                    <!-- Recommendation 2 -->
+                    <div class="insight-card recommendation">
+                        <div class="insight-header">
+                            <div class="insight-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                                </svg>
+                            </div>
+                            <span class="insight-badge recommendation-badge">Recommendation</span>
+                        </div>
+                        <h3 class="insight-title">Update Server-Side Technologies</h3>
+                        <p class="insight-description">Consider replacing or supplementing PHP content with more modern backend technologies like Node.js, Python frameworks (Django/Flask), or containerization tools.</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2026 SkillSync. Connecting skills with opportunities.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
