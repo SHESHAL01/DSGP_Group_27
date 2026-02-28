@@ -171,3 +171,44 @@ def evaluate_model(model, test_df, sample_size=3000):
 
 evaluate_model(model, test_df)
 
+# ------------------- BUILD OR LOAD COURSE EMBEDDINGS -------------------
+if os.path.exists(EMBEDDINGS_SAVE_PATH):
+    print("Loading saved embeddings...")
+    course_embeddings = np.load(EMBEDDINGS_SAVE_PATH)
+else:
+    print("Generating course embeddings...")
+    course_embeddings = model.encode(
+        df["combined_text"].tolist(),
+        convert_to_numpy=True,
+        normalize_embeddings=True
+    )
+    np.save(EMBEDDINGS_SAVE_PATH, course_embeddings)
+    print("Embeddings saved!")
+
+# ------------------- RETRIEVAL FUNCTION -------------------
+def retrieve_top_k_courses(model, df, embeddings, query_skill, k=5):
+
+    query_embedding = model.encode(
+        [query_skill],
+        convert_to_numpy=True,
+        normalize_embeddings=True
+    )
+
+    sims = np.dot(embeddings, query_embedding.T).flatten()
+    top_k_idx = np.argsort(-sims)[:k]
+
+    return df.iloc[top_k_idx][["Title", "Url"]]
+
+# ------------------- EXAMPLE QUERY -------------------
+skill_query = "java"
+
+top_courses = retrieve_top_k_courses(
+    model,
+    df,
+    course_embeddings,
+    skill_query,
+    k=5
+)
+
+print("\nTop 5 Courses for:", skill_query)
+print(top_courses)
