@@ -310,3 +310,79 @@ plt.legend()
 plt.grid(True)
 plt.tight_layout()
 plt.show()
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import learning_curve
+
+
+def plot_learning_curve(model, X, y, title):
+    train_sizes, train_scores, test_scores = learning_curve(
+        model,
+        X,
+        y,
+        cv=5,
+        scoring='accuracy',
+        train_sizes=np.linspace(0.1, 1.0, 5),
+        n_jobs=-1
+    )
+
+    train_mean = np.mean(train_scores, axis=1)
+    test_mean = np.mean(test_scores, axis=1)
+
+    plt.figure()
+
+    # Training Accuracy Curve
+    plt.plot(
+        train_sizes,
+        train_mean,
+        marker='o',
+        linewidth=2,
+        label="Training Accuracy"
+    )
+
+    # Testing Accuracy Curve
+    plt.plot(
+        train_sizes,
+        test_mean,
+        marker='s',
+        linewidth=2,
+        label="Validation Accuracy"
+    )
+
+    plt.title(title + " - Learning Curve (Accuracy)")
+    plt.xlabel("Training Size")
+    plt.ylabel("Accuracy")
+    plt.legend()
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+
+# Plot for both models
+plot_learning_curve(best_log, X, y, "Logistic Regression (Tuned)")
+plot_learning_curve(best_rf, X, y, "Random Forest (Tuned)")
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import learning_curve
+from sklearn.metrics import log_loss
+
+
+def plot_loss_curve(model, X, y, title):
+    train_sizes, train_scores, test_scores = learning_curve(
+        model,
+        X,
+        y,
+        cv=5,
+        scoring='neg_log_loss',  # sklearn returns NEGATIVE log loss
+        train_sizes=np.linspace(0.1, 1.0, 5),
+        n_jobs=-1
+    )
+
+    # Convert negative log loss to positive
+    train_loss = -np.mean(train_scores, axis=1)
+    test_loss = -np.mean(test_scores, axis=1)
+
+    plt.figure()
+
