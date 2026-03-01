@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>SkillSync - Recommendations</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='rcmd.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+
+    <header class="header">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='Skill Sync Logo.png') }}">
+        </div>
+
+        <nav class="navbar">
+            <ul>
+                <li><a href="skillsync.html">Home</a></li>
+                <li><a href="#">Explore</a></li>
+                <li><a href="recommendation.html">Recommendations</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+
+        <section class="description">
+            <h2>Job Recommendation Engine</h2>
+            <p>"Unlock your potential - discover missing skills and gain the courses that fuel your success."</p>
+        </section>
+
+        <!-- 3 CARDS IN ONE ROW -->
+        <section class="top-layout">
+
+            <!-- USER PROFILE CARD -->
+            <div class="analysis-card">
+                <h3>Your Profile</h3>
+                <p><strong>Preferred Job:</strong> {{ job }}</p>
+                <p><strong>Your Skills:</strong> {{ user_skills }}</p>
+            </div>
+
+            <!-- SKILL MISMATCH -->
+            <div class="analysis-card">
+                <h3>Skill Mismatch</h3>
+                <ul>
+                {% for skill in mismatches %}
+                    <li>{{ skill }}</li>
+                {% endfor %}
+                </ul>
+            </div>
+
+            <!-- MODEL PERFORMANCE -->
+            <div class="analysis-card">
+                <h3>Model Performance</h3>
+                <p><span>Precision</span> <span>{{ metrics.Precision }}</span></p>
+                <p><span>Recall</span> <span>{{ metrics.Recall }}</span></p>
+                <p><span>F1 Score</span> <span>{{ metrics.F1 }}</span></p>
+            </div>
+
+        </section>
+
+        <!-- RECOMMENDATIONS -->
+        <section class="recommendations">
+            <h3>Top Matches</h3>
+
+            {% for skill, courses in recommendations.items() %}
+
+            <h4>{{ skill | capitalize }}</h4>
+
+            {% for course in courses %}
+            <div class="job-card">
+                <h4>{{ course.Title }}</h4>
+                <a href="{{ course.Url }}" target="_blank">View Course</a>
+            </div>
+            {% endfor %}
+
+            {% endfor %}
+
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        © 2026 SkillSync | All Rights Reserved
+    </footer>
+
+</body>
+</html>
