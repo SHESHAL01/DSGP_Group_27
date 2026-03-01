@@ -386,3 +386,85 @@ def plot_loss_curve(model, X, y, title):
 
     plt.figure()
 
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
+import pandas as pd
+import numpy as np
+
+def compute_metrics_per_class(model, X_test, y_test, class_names):
+    y_pred = model.predict(X_test)
+    cm = confusion_matrix(y_test, y_pred, labels=class_names)
+
+    results = []
+
+    for i in range(len(class_names)):
+        TP = cm[i, i]
+        FN = cm[i, :].sum() - TP
+        FP = cm[:, i].sum() - TP
+        TN = cm.sum() - (TP + FP + FN)
+
+        # Safe division to avoid ZeroDivisionError
+        sensitivity = TP / (TP + FN) if (TP + FN) != 0 else 0
+        specificity = TN / (TN + FP) if (TN + FP) != 0 else 0
+        ppv = TP / (TP + FP) if (TP + FP) != 0 else 0
+        npv = TN / (TN + FN) if (TN + FN) != 0 else 0
+        youden = sensitivity + specificity - 1
+
+        results.append([class_names[i], sensitivity, ppv, npv, youden])
+
+    return pd.DataFrame(
+        results,
+        columns=["Class", "Sensitivity", "PPV", "NPV", "Youden"]
+    )
+# ----- DEFINE METRICS -----
+class_names = best_log.classes_
+
+lr_metrics = compute_metrics_per_class(best_log, X_test, y_test, class_names)
+rf_metrics = compute_metrics_per_class(best_rf, X_test, y_test, class_names)
+
+print(lr_metrics)
+print(rf_metrics)
+
+# ----- GROUPED BAR FUNCTION -----
+def plot_metrics_grouped(df, title):
+    classes = df["Class"]
+    x = np.arange(len(classes))
+    width = 0.25   # bar width
+
+    plt.figure(figsize=(10,6))
+
+    plt.bar(x - width, df["Sensitivity"], width, label="Sensitivity")
+    plt.bar(x, df["PPV"], width, label="PPV")
+    plt.bar(x + width, df["NPV"], width, label="NPV")
+
+    plt.xticks(x, classes, rotation=45)
+    plt.ylabel("Score")
+    plt.title(title)
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+# ----- CALL PLOTS -----
+plot_metrics_grouped(rf_metrics, "Sensitivity / PPV / NPV - Random Forest")
+plot_metrics_grouped(lr_metrics, "Sensitivity / PPV / NPV - Logistic Regression")
+
+def plot_youden_comparison(lr_df, rf_df):
+    classes = lr_df["Class"]
+    x = np.arange(len(classes))
+    width = 0.35
+
+    plt.figure(figsize=(10,6))
+
+    plt.bar(x - width/2, lr_df["Youden"], width, label="Logistic Regression")
+    plt.bar(x + width/2, rf_df["Youden"], width, label="Random Forest")
+
+    plt.xticks(x, classes, rotation=45)
+    plt.ylabel("Youden Index")
+    plt.title("Youden Index per Class: LR vs RF")
+    plt.legend()
+    plt.tight_layout()
+    plt.show()
+
+plot_youden_comparison(lr_metrics, rf_metrics)
