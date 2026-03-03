@@ -363,6 +363,90 @@ roc_auc_xgb = roc_auc_score(
 
 print("\nMacro ROC-AUC:", roc_auc_xgb)
 
+from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.model_selection import GridSearchCV
+from sklearn.metrics import accuracy_score, classification_report
+
+print("\n" + "="*60)
+print("TUNING: GRADIENT BOOSTING")
+print("="*60)
+
+gb_param_grid = {
+    'n_estimators': [100, 200, 300],
+    'learning_rate': [0.01, 0.05, 0.1],
+    'max_depth': [3, 5],
+    'min_samples_split': [2, 5],
+    'min_samples_leaf': [1, 3]
+}
+
+gb_grid = GridSearchCV(
+    GradientBoostingClassifier(random_state=42),
+    gb_param_grid,
+    cv=5,
+    scoring='f1_macro',
+    n_jobs=-1
+)
+
+gb_grid.fit(X_train, y_train)
+
+best_gb = gb_grid.best_estimator_
+
+print("Best Gradient Boosting Parameters:")
+print(gb_grid.best_params_)
+
+# Evaluate
+y_pred_gb = best_gb.predict(X_test)
+
+print("\nTuned Gradient Boosting Accuracy:",
+      accuracy_score(y_test, y_pred_gb))
+
+print("\nClassification Report:\n")
+print(classification_report(y_test, y_pred_gb))
+
+from xgboost import XGBClassifier
+
+print("\n" + "="*60)
+print("TUNING: XGBOOST")
+print("="*60)
+
+xgb_param_grid = {
+    'n_estimators': [100, 200, 300],
+    'max_depth': [4, 6, 8],
+    'learning_rate': [0.01, 0.05, 0.1],
+    'subsample': [0.8, 1.0],
+    'colsample_bytree': [0.8, 1.0]
+}
+
+xgb_grid = GridSearchCV(
+    XGBClassifier(
+        objective="multi:softprob",
+        num_class=len(np.unique(y_train)),
+        eval_metric="mlogloss",
+        random_state=42
+    ),
+    xgb_param_grid,
+    cv=5,
+    scoring='f1_macro',
+    n_jobs=-1
+)
+
+xgb_grid.fit(X_train, y_train)
+
+best_xgb = xgb_grid.best_estimator_
+
+print("Best XGBoost Parameters:")
+print(xgb_grid.best_params_)
+
+# Evaluate
+y_pred_xgb = best_xgb.predict(X_test)
+
+print("\nTuned XGBoost Accuracy:",
+      accuracy_score(y_test, y_pred_xgb))
+
+print("\nClassification Report:\n")
+print(classification_report(y_test, y_pred_xgb))
+
+
 
 # import matplotlib.pyplot as plt
 # from sklearn.linear_model import LogisticRegression
