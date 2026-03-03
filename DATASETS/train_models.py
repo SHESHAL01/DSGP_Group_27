@@ -446,6 +446,66 @@ print("\nTuned XGBoost Accuracy:",
 print("\nClassification Report:\n")
 print(classification_report(y_test, y_pred_xgb))
 
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import label_binarize
+from sklearn.metrics import roc_curve, auc
+import numpy as np
+
+# Binarize test labels
+classes = np.unique(y_test)
+y_test_bin = label_binarize(y_test, classes=classes)
+n_classes = y_test_bin.shape[1]
+
+# Predict probabilities
+y_score_gb = best_gb.predict_proba(X_test)
+
+fpr = dict()
+tpr = dict()
+roc_auc = dict()
+
+for i in range(n_classes):
+    fpr[i], tpr[i], _ = roc_curve(y_test_bin[:, i], y_score_gb[:, i])
+    roc_auc[i] = auc(fpr[i], tpr[i])
+
+plt.figure(figsize=(8,6))
+for i in range(n_classes):
+    plt.plot(fpr[i], tpr[i], lw=2,
+             label=f"Class {classes[i]} (AUC = {roc_auc[i]:.2f})")
+
+plt.plot([0, 1], [0, 1], 'k--')
+plt.title("ROC-AUC Curve - Tuned Gradient Boosting")
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.legend(loc="lower right")
+plt.show()
+
+# For XGBoost (encoded labels)
+classes = np.unique(y_test)
+y_test_bin = label_binarize(y_test, classes=classes)
+n_classes = y_test_bin.shape[1]
+
+y_score_xgb = best_xgb.predict_proba(X_test)
+
+fpr = dict()
+tpr = dict()
+roc_auc = dict()
+
+for i in range(n_classes):
+    fpr[i], tpr[i], _ = roc_curve(y_test_bin[:, i], y_score_xgb[:, i])
+    roc_auc[i] = auc(fpr[i], tpr[i])
+
+plt.figure(figsize=(8,6))
+for i in range(n_classes):
+    plt.plot(fpr[i], tpr[i], lw=2,
+             label=f"Class {classes[i]} (AUC = {roc_auc[i]:.2f})")
+
+plt.plot([0, 1], [0, 1], 'k--')
+plt.title("ROC-AUC Curve - Tuned XGBoost")
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.legend(loc="lower right")
+plt.show()
+
 
 
 # import matplotlib.pyplot as plt
