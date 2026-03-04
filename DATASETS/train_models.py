@@ -263,6 +263,7 @@ from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, roc_auc_score
 from sklearn.preprocessing import label_binarize
 import numpy as np
+from sklearn.model_selection import StratifiedKFold
 
 print("\n" + "="*60)
 print("BASELINE MODEL: GRADIENT BOOSTING")
@@ -294,8 +295,14 @@ y_test_bin = label_binarize(y_test, classes=np.unique(y))
 gb_roc_auc = roc_auc_score(y_test_bin, y_proba_gb, multi_class='ovr', average='macro')
 print("\nMacro ROC-AUC:", gb_roc_auc)
 
+from sklearn.model_selection import StratifiedKFold
 
-from xgboost import XGBClassifier
+cv = StratifiedKFold(
+    n_splits=5,
+    shuffle=True,
+    random_state=42
+)
+
 
 from sklearn.preprocessing import LabelEncoder
 
@@ -382,7 +389,7 @@ gb_param_grid = {
 gb_grid = GridSearchCV(
     GradientBoostingClassifier(random_state=42),
     gb_param_grid,
-    cv=5,
+    cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=42),
     scoring='f1_macro',
     n_jobs=-1
 )
@@ -425,7 +432,7 @@ xgb_grid = GridSearchCV(
         random_state=42
     ),
     xgb_param_grid,
-    cv=5,
+    cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=42),
     scoring='f1_macro',
     n_jobs=-1
 )
@@ -506,37 +513,210 @@ plt.ylabel("True Positive Rate")
 plt.legend(loc="lower right")
 plt.show()
 
+from sklearn.metrics import accuracy_score, log_loss
+from sklearn.preprocessing import label_binarize
+import numpy as np
 
+print("\n" + "="*60)
+print("OVERFITTING CHECK: TUNED GRADIENT BOOSTING")
+print("="*60)
 
-# import matplotlib.pyplot as plt
-# from sklearn.linear_model import LogisticRegression
-# from sklearn.metrics import accuracy_score
-#
-# train_acc = []
-# test_acc = []
-# max_iter_list = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
-#
-# for iters in max_iter_list:
-#     lr = LogisticRegression(max_iter=iters, solver='lbfgs')
-#     lr.fit(X_train, y_train)
-#
-#     # Track training accuracy
-#     y_train_pred = lr.predict(X_train)
-#     train_acc.append(accuracy_score(y_train, y_train_pred))
-#
-#     # Track testing accuracy
-#     y_test_pred = lr.predict(X_test)
-#     test_acc.append(accuracy_score(y_test, y_test_pred))
-#
-# plt.figure(figsize=(8, 6))
-# plt.plot(max_iter_list, train_acc, label="Train Accuracy", marker='o')
-# plt.plot(max_iter_list, test_acc, label="Test Accuracy", marker='o')
-# plt.xlabel("Max Iterations")
-# plt.ylabel("Accuracy")
-# plt.title("Logistic Regression: Train vs Test Accuracy")
-# plt.legend()
-# plt.grid(True)
-# plt.show()
+# Predictions
+y_train_pred_gb = best_gb.predict(X_train)
+y_test_pred_gb = best_gb.predict(X_test)
+
+# Accuracy
+train_acc_gb = accuracy_score(y_train, y_train_pred_gb)
+test_acc_gb = accuracy_score(y_test, y_test_pred_gb)
+
+print("\nTraining Accuracy:", train_acc_gb)
+print("Testing Accuracy:", test_acc_gb)
+
+# Log Loss
+y_train_proba_gb = best_gb.predict_proba(X_train)
+y_test_proba_gb = best_gb.predict_proba(X_test)
+
+train_loss_gb = log_loss(y_train, y_train_proba_gb)
+test_loss_gb = log_loss(y_test, y_test_proba_gb)
+
+print("\nTraining Log Loss:", train_loss_gb)
+print("Testing Log Loss:", test_loss_gb)
+
+print("\n" + "="*60)
+print("OVERFITTING CHECK: TUNED XGBOOST")
+print("="*60)
+
+# Predictions
+y_train_pred_xgb = best_xgb.predict(X_train)
+y_test_pred_xgb = best_xgb.predict(X_test)
+
+# Accuracy
+train_acc_xgb = accuracy_score(y_train, y_train_pred_xgb)
+test_acc_xgb = accuracy_score(y_test, y_test_pred_xgb)
+
+print("\nTraining Accuracy:", train_acc_xgb)
+print("Testing Accuracy:", test_acc_xgb)
+
+# Log Loss
+y_train_proba_xgb = best_xgb.predict_proba(X_train)
+y_test_proba_xgb = best_xgb.predict_proba(X_test)
+
+train_loss_xgb = log_loss(y_train, y_train_proba_xgb)
+test_loss_xgb = log_loss(y_test, y_test_proba_xgb)
+
+print("\nTraining Log Loss:", train_loss_xgb)
+print("Testing Log Loss:", test_loss_xgb)
+
+import matplotlib.pyplot as plt
+
+models = ['Gradient Boosting', 'XGBoost']
+train_scores = [train_acc_gb, train_acc_xgb]
+test_scores = [test_acc_gb, test_acc_xgb]
+
+x = np.arange(len(models))
+
+plt.figure(figsize=(8,6))
+plt.bar(x - 0.2, train_scores, width=0.4, label='Training Accuracy')
+plt.bar(x + 0.2, test_scores, width=0.4, label='Testing Accuracy')
+
+plt.xticks(x, models)
+plt.ylabel("Accuracy")
+plt.title("Training vs Testing Accuracy")
+plt.legend()
+plt.grid(axis='y')
+plt.show()
+
+import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score, log_loss
+import numpy as np
+
+train_acc = []
+test_acc = []
+train_loss = []
+test_loss = []
+
+n_estimators_range = range(10, 301, 20)
+
+for n in n_estimators_range:
+    model = GradientBoostingClassifier(
+        n_estimators=n,
+        learning_rate=best_gb.learning_rate,
+        max_depth=best_gb.max_depth,
+        random_state=42
+    )
+
+    model.fit(X_train, y_train)
+
+    # Accuracy
+    train_acc.append(accuracy_score(y_train, model.predict(X_train)))
+    test_acc.append(accuracy_score(y_test, model.predict(X_test)))
+
+    # Loss
+    train_loss.append(log_loss(y_train, model.predict_proba(X_train)))
+    test_loss.append(log_loss(y_test, model.predict_proba(X_test)))
+
+# Plot Accuracy Curve
+plt.figure(figsize=(8, 6))
+plt.plot(n_estimators_range, train_acc, label="Training Accuracy")
+plt.plot(n_estimators_range, test_acc, label="Testing Accuracy")
+plt.xlabel("Number of Estimators")
+plt.ylabel("Accuracy")
+plt.title("Gradient Boosting Accuracy Curve")
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Plot Loss Curve
+plt.figure(figsize=(8, 6))
+plt.plot(n_estimators_range, train_loss, label="Training Loss")
+plt.plot(n_estimators_range, test_loss, label="Testing Loss")
+plt.xlabel("Number of Estimators")
+plt.ylabel("Log Loss")
+plt.title("Gradient Boosting Loss Curve")
+plt.legend()
+plt.grid(True)
+plt.show()
+
+import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score, log_loss
+import numpy as np
+
+train_acc = []
+test_acc = []
+train_loss = []
+test_loss = []
+
+n_estimators_range = range(10, 301, 20)
+
+for n in n_estimators_range:
+    model = XGBClassifier(
+        n_estimators=n,
+        learning_rate=best_gb.learning_rate,
+        max_depth=best_gb.max_depth,
+        random_state=42
+    )
+
+    model.fit(X_train, y_train)
+
+    # Accuracy
+    train_acc.append(accuracy_score(y_train, model.predict(X_train)))
+    test_acc.append(accuracy_score(y_test, model.predict(X_test)))
+
+    # Loss
+    train_loss.append(log_loss(y_train, model.predict_proba(X_train)))
+    test_loss.append(log_loss(y_test, model.predict_proba(X_test)))
+
+# Plot Accuracy Curve
+plt.figure(figsize=(8, 6))
+plt.plot(n_estimators_range, train_acc, label="Training Accuracy")
+plt.plot(n_estimators_range, test_acc, label="Testing Accuracy")
+plt.xlabel("Number of Estimators")
+plt.ylabel("Accuracy")
+plt.title("XGBoost Accuracy Curve")
+plt.legend()
+plt.grid(True)
+plt.show()
+
+# Plot Loss Curve
+plt.figure(figsize=(8, 6))
+plt.plot(n_estimators_range, train_loss, label="Training Loss")
+plt.plot(n_estimators_range, test_loss, label="Testing Loss")
+plt.xlabel("Number of Estimators")
+plt.ylabel("Log Loss")
+plt.title("XGBoost Loss Curve")
+plt.legend()
+plt.grid(True)
+plt.show()
+
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+train_acc = []
+test_acc = []
+max_iter_list = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+
+for iters in max_iter_list:
+    lr = LogisticRegression(max_iter=iters, solver='lbfgs')
+    lr.fit(X_train, y_train)
+
+    # Track training accuracy
+    y_train_pred = lr.predict(X_train)
+    train_acc.append(accuracy_score(y_train, y_train_pred))
+
+    # Track testing accuracy
+    y_test_pred = lr.predict(X_test)
+    test_acc.append(accuracy_score(y_test, y_test_pred))
+
+plt.figure(figsize=(8, 6))
+plt.plot(max_iter_list, train_acc, label="Train Accuracy", marker='o')
+plt.plot(max_iter_list, test_acc, label="Test Accuracy", marker='o')
+plt.xlabel("Max Iterations")
+plt.ylabel("Accuracy")
+plt.title("Logistic Regression: Train vs Test Accuracy")
+plt.legend()
+plt.grid(True)
+plt.show()
 #
 # train_acc_rf = []
 # test_acc_rf = []
