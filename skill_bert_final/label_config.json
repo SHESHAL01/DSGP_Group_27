@@ -1,0 +1,1 @@
+{"id2label": {"0": "O", "1": "B-SKILL", "2": "I-SKILL"}, "label2id": {"O": 0, "B-SKILL": 1, "I-SKILL": 2}, "label_list": ["O", "B-SKILL", "I-SKILL"]}
