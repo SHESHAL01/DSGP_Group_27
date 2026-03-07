@@ -13,6 +13,8 @@ from sklearn.metrics import (
     average_precision_score,
     roc_auc_score,
     f1_score,
+    precision_score,
+    recall_score,
     confusion_matrix,
     ConfusionMatrixDisplay
 )
@@ -24,12 +26,17 @@ BASE_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 MODEL_SAVE_PATH = "saved_course_model"
 EMBEDDINGS_SAVE_PATH = "course_embeddings.npy"
 
-EPOCHS = 4          # your optimal value
-WARMUP_RATIO = 0.15  # your optimal value
-BATCH_SIZE = 16
+EPOCHS = 4
+WARMUP_RATIO = 0.1
+BATCH_SIZE = 32
 
 # ------------------- LOAD DATA -------------------
-df = pd.read_csv(DATA_PATH)
+try:
+    df = pd.read_csv(DATA_PATH)
+except FileNotFoundError:
+    raise FileNotFoundError(f"CSV file not found at {DATA_PATH}")
+except Exception as e:
+    raise Exception(f"Error reading CSV file: {e}")
 
 # ------------------- PREPROCESSING -------------------
 def parse_skills(s):
@@ -46,161 +53,186 @@ def parse_skills(s):
 df["skills_list"] = df["Skills"].fillna("[]").apply(parse_skills)
 
 df["combined_text"] = df.apply(
-    lambda r: f"{str(r.get('Title',''))} | {' '.join(r['skills_list'])}",
+    lambda r: f"{str(r.get('Title',''))}. Skills: {' '.join(r['skills_list'])}",
     axis=1
 )
 
 train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
 
-# ------------------- CREATE TRAIN PAIRS -------------------
-def create_training_pairs(data, negative_prob=0.05, max_pairs=1024000):
+# ------------------- CREATE POSITIVE PAIRS -------------------
+def create_positive_pairs(data, min_overlap=2):
     examples = []
-
     for i in range(len(data)):
         for j in range(i + 1, len(data)):
             skills_i = set(data.iloc[i]["skills_list"])
             skills_j = set(data.iloc[j]["skills_list"])
-
-            if skills_i & skills_j:
-                label = 1.0
-            elif random.random() < negative_prob:
-                label = 0.0
-            else:
-                continue
-
-            examples.append(
-                InputExample(
-                    texts=[data.iloc[i]["combined_text"],
-                           data.iloc[j]["combined_text"]],
-                    label=label
+            overlap = len(skills_i & skills_j)
+            if overlap >= min_overlap:
+                examples.append(
+                    InputExample(
+                        texts=[
+                            data.iloc[i]["combined_text"],
+                            data.iloc[j]["combined_text"]
+                        ]
+                    )
                 )
-            )
-
-    if len(examples) > max_pairs:
-        examples = random.sample(examples, max_pairs)
-
     return examples
 
 # ------------------- TRAIN OR LOAD MODEL -------------------
-if os.path.exists(MODEL_SAVE_PATH):
-    print("Loading saved model...")
-    model = SentenceTransformer(MODEL_SAVE_PATH)
-else:
-    print("Training model...")
-    train_examples = create_training_pairs(train_df)
+try:
+    if os.path.exists(MODEL_SAVE_PATH):
+        print("Loading saved model...")
+        model = SentenceTransformer(MODEL_SAVE_PATH)
+    else:
+        print("Training model...")
+        train_examples = create_positive_pairs(train_df, min_overlap=2)
+        print("Total training pairs:", len(train_examples))
 
-    model = SentenceTransformer(BASE_MODEL)
+        model = SentenceTransformer(BASE_MODEL)
 
-    train_dataloader = DataLoader(
-        train_examples,
-        shuffle=True,
-        batch_size=BATCH_SIZE
-    )
+        train_dataloader = DataLoader(
+            train_examples,
+            shuffle=True,
+            batch_size=BATCH_SIZE
+        )
 
-    train_loss = losses.CosineSimilarityLoss(model)
+        train_loss = losses.MultipleNegativesRankingLoss(model)
 
-    total_steps = len(train_dataloader) * EPOCHS
-    warmup_steps = int(total_steps * WARMUP_RATIO)
+        total_steps = len(train_dataloader) * EPOCHS
+        warmup_steps = int(total_steps * WARMUP_RATIO)
 
-    model.fit(
-        train_objectives=[(train_dataloader, train_loss)],
-        epochs=EPOCHS,
-        warmup_steps=warmup_steps,
-        show_progress_bar=True
-    )
+        model.fit(
+            train_objectives=[(train_dataloader, train_loss)],
+            epochs=EPOCHS,
+            warmup_steps=warmup_steps,
+            show_progress_bar=True
+        )
 
-    model.save(MODEL_SAVE_PATH)
-    print("Model saved successfully!")
+        model.save(MODEL_SAVE_PATH)
+        print("Model saved successfully!")
+except Exception as e:
+    raise Exception(f"Error in model training/loading: {e}")
 
-# ------------------- EVALUATION -------------------
-def evaluate_model(model, test_df, sample_size=3000):
+# ------------------- RETRIEVAL EVALUATION -------------------
+def evaluate_model_with_metrics(model, test_df, sample_size=20000):
+    try:
+        texts = test_df["combined_text"].tolist()
+        skills = test_df["skills_list"].tolist()
 
-    texts = test_df["combined_text"].tolist()
-    skills = test_df["skills_list"].tolist()
+        embeddings = model.encode(
+            texts,
+            convert_to_numpy=True,
+            normalize_embeddings=True
+        )
 
-    embeddings = model.encode(
-        texts,
-        convert_to_numpy=True,
-        normalize_embeddings=True
-    )
+        y_true = []
+        y_scores = []
+        n = len(texts)
 
-    y_true = []
-    y_scores = []
+        positives, negatives = [], []
 
-    n = len(texts)
+        while len(positives) < sample_size // 2 or len(negatives) < sample_size // 2:
+            i, j = random.randint(0, n - 1), random.randint(0, n - 1)
+            if i == j:
+                continue
 
-    for _ in range(sample_size):
-        i = random.randint(0, n - 1)
-        j = random.randint(0, n - 1)
+            label = 1 if set(skills[i]) & set(skills[j]) else 0
+            score = np.dot(embeddings[i], embeddings[j])
 
-        if i == j:
-            continue
+            if label == 1 and len(positives) < sample_size // 2:
+                positives.append((label, score))
+            elif label == 0 and len(negatives) < sample_size // 2:
+                negatives.append((label, score))
 
-        label = 1 if set(skills[i]) & set(skills[j]) else 0
-        score = np.dot(embeddings[i], embeddings[j])
+        combined = positives + negatives
+        random.shuffle(combined)
 
-        y_true.append(label)
-        y_scores.append(score)
+        for label, score in combined:
+            y_true.append(label)
+            y_scores.append(score)
 
-    ap = average_precision_score(y_true, y_scores)
-    roc_auc = roc_auc_score(y_true, y_scores)
+        ap = average_precision_score(y_true, y_scores)
+        roc_auc = roc_auc_score(y_true, y_scores)
 
-    # Best threshold
-    thresholds = np.linspace(0, 1, 50)
-    best_f1 = 0
-    best_threshold = 0.5
+        thresholds = np.linspace(-1, 1, 100)
+        best_f1 = 0
+        best_threshold = 0
+        for t in thresholds:
+            preds = [1 if s >= t else 0 for s in y_scores]
+            f1 = f1_score(y_true, preds)
+            if f1 > best_f1:
+                best_f1 = f1
+                best_threshold = t
 
-    for t in thresholds:
-        preds = [1 if s >= t else 0 for s in y_scores]
-        f1 = f1_score(y_true, preds)
-        if f1 > best_f1:
-            best_f1 = f1
-            best_threshold = t
+        final_preds = [1 if s >= best_threshold else 0 for s in y_scores]
 
-    final_preds = [1 if s >= best_threshold else 0 for s in y_scores]
-    cm = confusion_matrix(y_true, final_preds)
+        precision = precision_score(y_true, final_preds)
+        recall = recall_score(y_true, final_preds)
 
-    print("\nAP:", ap)
-    print("ROC-AUC:", roc_auc)
-    print("Best F1:", best_f1)
+        cm = confusion_matrix(y_true, final_preds)
 
-    disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-    disp.plot()
-    plt.title("Confusion Matrix")
-    plt.show()
+        print("\n====== Evaluation Results ======")
+        print(f"Average Precision (AP): {ap:.4f}")
+        print(f"ROC-AUC: {roc_auc:.4f}")
+        print(f"Best F1: {best_f1:.4f}")
+        print(f"Precision: {precision:.4f}")
+        print(f"Recall: {recall:.4f}")
+        print(f"Best Threshold: {best_threshold:.4f}")
 
-evaluate_model(model, test_df)
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+        disp.plot()
+        plt.title("Confusion Matrix")
+        plt.show()
 
-# ------------------- BUILD OR LOAD COURSE EMBEDDINGS -------------------
-if os.path.exists(EMBEDDINGS_SAVE_PATH):
-    print("Loading saved embeddings...")
-    course_embeddings = np.load(EMBEDDINGS_SAVE_PATH)
-else:
-    print("Generating course embeddings...")
-    course_embeddings = model.encode(
-        df["combined_text"].tolist(),
-        convert_to_numpy=True,
-        normalize_embeddings=True
-    )
-    np.save(EMBEDDINGS_SAVE_PATH, course_embeddings)
-    print("Embeddings saved!")
+        return {
+            "AP": ap,
+            "ROC-AUC": roc_auc,
+            "F1": best_f1,
+            "Precision": precision,
+            "Recall": recall
+        }
+    except Exception as e:
+        raise Exception(f"Error during evaluation: {e}")
+
+try:
+    evaluate_model_with_metrics(model, test_df)
+except Exception as e:
+    print(e)
+
+# ------------------- BUILD OR LOAD EMBEDDINGS -------------------
+try:
+    if os.path.exists(EMBEDDINGS_SAVE_PATH):
+        print("Loading saved embeddings...")
+        course_embeddings = np.load(EMBEDDINGS_SAVE_PATH)
+    else:
+        print("Generating course embeddings...")
+        course_embeddings = model.encode(
+            df["combined_text"].tolist(),
+            convert_to_numpy=True,
+            normalize_embeddings=True
+        )
+        np.save(EMBEDDINGS_SAVE_PATH, course_embeddings)
+        print("Embeddings saved!")
+except Exception as e:
+    raise Exception(f"Error in embeddings processing: {e}")
 
 # ------------------- RETRIEVAL FUNCTION -------------------
 def retrieve_top_k_courses(model, df, embeddings, query_skill, k=5):
-
-    query_embedding = model.encode(
-        [query_skill],
-        convert_to_numpy=True,
-        normalize_embeddings=True
-    )
-
-    sims = np.dot(embeddings, query_embedding.T).flatten()
-    top_k_idx = np.argsort(-sims)[:k]
-
-    return df.iloc[top_k_idx][["Title", "Url"]]
+    try:
+        query_embedding = model.encode(
+            [query_skill],
+            convert_to_numpy=True,
+            normalize_embeddings=True
+        )
+        sims = np.dot(embeddings, query_embedding.T).flatten()
+        top_k_idx = np.argsort(-sims)[:k]
+        return df.iloc[top_k_idx][["Title", "Url"]]
+    except Exception as e:
+        print(f"Error in retrieval: {e}")
+        return pd.DataFrame(columns=["Title", "Url"])
 
 # ------------------- EXAMPLE QUERY -------------------
-skill_query = "java"
+skill_query = "Maths"
 
 top_courses = retrieve_top_k_courses(
     model,

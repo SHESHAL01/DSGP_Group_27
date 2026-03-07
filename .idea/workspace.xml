@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="8935a41b-8f4d-44ac-ab51-539352ba9e07" name="Changes" comment="Added  optimal values after the testings. and also added the confusion matrix">
+    <list default="true" id="8935a41b-8f4d-44ac-ab51-539352ba9e07" name="Changes" comment="create course embeddings and save them for recommendation">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/C4.py" beforeDir="false" afterPath="$PROJECT_DIR$/C4.py" afterDir="false" />
     </list>
@@ -155,7 +155,13 @@
       <workItem from="1771735994985" duration="3702000" />
       <workItem from="1771756902211" duration="21665000" />
       <workItem from="1772037216290" duration="42819000" />
-      <workItem from="1772254378566" duration="321000" />
+      <workItem from="1772254378566" duration="11387000" />
+      <workItem from="1772334554517" duration="4146000" />
+      <workItem from="1772377355671" duration="243000" />
+      <workItem from="1772419356236" duration="1431000" />
+      <workItem from="1772463508458" duration="1125000" />
+      <workItem from="1772815839897" duration="2120000" />
+      <workItem from="1772870346780" duration="5836000" />
     </task>
     <task id="LOCAL-00001" summary="Import final dataset and preprocess for use sentence transformer">
       <option name="closed" value="true" />
@@ -277,7 +283,15 @@
       <option name="project" value="LOCAL" />
       <updated>1772038861523</updated>
     </task>
-    <option name="localTasksCounter" value="16" />
+    <task id="LOCAL-00016" summary="create course embeddings and save them for recommendation">
+      <option name="closed" value="true" />
+      <created>1772254755121</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1772254755121</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -297,10 +311,11 @@
     <MESSAGE value="added a function to plot PR curves" />
     <MESSAGE value="added ROC AUC curve plot, F1 scores" />
     <MESSAGE value="Added  optimal values after the testings. and also added the confusion matrix" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added  optimal values after the testings. and also added the confusion matrix" />
+    <MESSAGE value="create course embeddings and save them for recommendation" />
+    <option name="LAST_COMMIT_MESSAGE" value="create course embeddings and save them for recommendation" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/PythonProject$C4.coverage" NAME="C4 Coverage Results" MODIFIED="1772235473686" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/PythonProject$C4.coverage" NAME="C4 Coverage Results" MODIFIED="1772819211512" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/PythonProject$Component_4.coverage" NAME="Component_4 Coverage Results" MODIFIED="1765102801622" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
