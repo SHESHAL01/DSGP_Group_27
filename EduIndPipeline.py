@@ -1,6 +1,11 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder, StandardScaler
+import ast
+import torch
+from sentence_transformers import SentenceTransformer, util
+from fuzzywuzzy import fuzz
+from scipy.spatial import distance
 
 def DataAnalysis(df):
     print("DATASET OVERVIEW")
@@ -69,6 +74,9 @@ def feature_extraction(df):
     df_features['Degree_Encoded'] = le_degree.fit_transform(df_features['Degree Program'])
 
     return df_features
+
+def Similarity_Measures():
+    pass
 
 def main():
     data = pd.read_csv('data.csv')
