@@ -3,7 +3,6 @@ import numpy as np
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sentence_transformers import SentenceTransformer, util
 from fuzzywuzzy import fuzz
-import seaborn as sns
 import matplotlib.pyplot as plt
 
 def DataAnalysis(df):
