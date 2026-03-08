@@ -75,6 +75,21 @@ def feature_extraction(df):
 
     return df_features
 
+def mock_market_demand():
+    # Test "Market Demand Analyzer" output
+    skill_df = pd.read_csv('skill_Data.csv')
+    market_demand_skills_set = set()
+
+    for row in skill_df['Skills']:
+        if isinstance(row, str):
+            # Split each row by comma, strip whitespace, and convert to lowercase
+            skills = [s.strip().lower() for s in row.split(',')]
+            market_demand_skills_set.update(skills)
+
+    market_demand_skills = list(market_demand_skills_set)
+    return market_demand_skills
+
+
 def Similarity_Measures():
     # Initialize Model
     model = SentenceTransformer('all-MiniLM-L6-v2')
