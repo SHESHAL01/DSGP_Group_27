@@ -76,6 +76,9 @@ def feature_extraction(df):
     return df_features
 
 def Similarity_Measures():
+    # Initialize Model
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+
     # Market Demand Data
     market_text = ", ".join(market_demand_skills)
     print(market_text)
