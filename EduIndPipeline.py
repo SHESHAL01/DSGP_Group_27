@@ -1,12 +1,8 @@
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-import ast
-import torch
 from sentence_transformers import SentenceTransformer, util
 from fuzzywuzzy import fuzz
-from scipy.spatial import distance
-import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.pyplot as plt
 
