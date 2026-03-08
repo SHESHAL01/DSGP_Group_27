@@ -6,6 +6,9 @@ import torch
 from sentence_transformers import SentenceTransformer, util
 from fuzzywuzzy import fuzz
 from scipy.spatial import distance
+import matplotlib.pyplot as plt
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 def DataAnalysis(df):
     print("DATASET OVERVIEW")
@@ -144,6 +147,30 @@ def Similarity_Measures():
 
     print("\n--- FINAL CURRICULUM RELEVANCE SCORES PER UNIVERSITY ---")
     print(df_uni_score.to_markdown(index=False))
+
+def plot_charts():
+
+    df_uni_score.plot(x='University', y=['Cosine_Relevance_%', 'Jaccard_Relevance_%', 'Fuzzy_Relevance_%'],
+                      kind='bar', figsize=(12, 6))
+
+    plt.title("Curriculum Relevance Comparison by Similarity Method")
+    plt.ylabel("Alignment Score (%)")
+    plt.legend(title="ML Models", bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    plt.show()
+
+    # Insight: Identify Skill Gaps
+    all_extracted_skills = [skill for sublist in df_features['Skills'] for skill in sublist]
+    taught_skills_unique = set([s.lower() for s in all_extracted_skills])
+    market_skills_unique = set([s.lower() for s in market_demand_skills])
+
+    # Skills in market but NOT in curriculum
+    skill_gap = market_skills_unique - taught_skills_unique
+
+    print("\n--- INSIGHTS & RECOMMENDATIONS ---")
+    print(f"Identified Skill Gaps: {list(skill_gap)}")
+    if skill_gap:
+        print(f"Recommendation: Consider adding modules for {', '.join(list(skill_gap)[:3])} to improve alignment")
 
 def main():
     data = pd.read_csv('data.csv')
