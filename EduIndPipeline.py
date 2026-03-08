@@ -93,7 +93,7 @@ def mock_market_demand():
     return market_demand_skills
 
 
-def Similarity_Measures():
+def Similarity_Measures(market_demand_skills):
     # Initialize Model
     model = SentenceTransformer('all-MiniLM-L6-v2')
 
@@ -145,10 +145,12 @@ def Similarity_Measures():
 
     df_uni_score = uni_relevance_report.reset_index()
 
+
     print("\n--- FINAL CURRICULUM RELEVANCE SCORES PER UNIVERSITY ---")
     print(df_uni_score.to_markdown(index=False))
+    return df_uni_score
 
-def plot_charts():
+def plot_charts(df_uni_score,df_features,market_demand_skills):
 
     df_uni_score.plot(x='University', y=['Cosine_Relevance_%', 'Jaccard_Relevance_%', 'Fuzzy_Relevance_%'],
                       kind='bar', figsize=(12, 6))
@@ -187,6 +189,10 @@ def main():
     DataAnalysis(df)
     word_count_analysis(df)
     df = feature_extraction(df)
+
+    mock_data = mock_market_demand()
+    uni_score = Similarity_Measures(mock_data)
+    plot_charts(uni_score,df,mock_data)
 
 
 if __name__ == '__main__':
