@@ -13,13 +13,13 @@ def DataAnalysis(df):
     print(f"Number of Columns: {df.shape[1]}")
     print("\nColumn Names and Types:")
     print(df.dtypes)
-    
+
     print("\nSAMPLE DATA")
     print(df.head())
-    
+
     print("\nSTATISTICAL SUMMARY")
     print(df.describe(include='all'))
-    
+
     print("\nMISSING VALUES ANALYSIS")
     missing = df.isnull().sum()
     missing_pct = (missing / len(df)) * 100
@@ -28,19 +28,20 @@ def DataAnalysis(df):
         'Percentage': missing_pct
     })
     print(missing_df[missing_df['Missing Count'] > 0])
-    
+
     print("\nUNIQUE VALUES PER COLUMN")
     for col in df.columns:
         print(f"{col}: {df[col].nunique()} unique values")
-    
+
     print("\nUNIVERSITY DISTRIBUTION")
     print(df['University'].value_counts())
-    
+
     print("\nDEGREE PROGRAM DISTRIBUTION")
     print(df['Degree Program'].value_counts())
-    
+
     print("\nYEAR DISTRIBUTION")
     print(df['Year'].value_counts().sort_index())
+
 
 def clean_data(df):
     # Removing duplicates and Nan values
@@ -51,6 +52,7 @@ def clean_data(df):
     df['Degree Program'] = df['Degree Program'].str.strip().str.lower().str.capitalize()
     df['Course Name'] = df['Course Name'].str.strip().str.lower().str.capitalize()
 
+
 def word_count_analysis(df):
     print("COURSE NAME ANALYSIS")
     course_name_lengths = df['Course Name'].str.len()
@@ -60,6 +62,7 @@ def word_count_analysis(df):
 
     word_counts = df['Course Name'].str.split().str.len()
     print(f"\nAverage Words in Course Name: {word_counts.mean():.2f}")
+
 
 def feature_extraction(df):
     df_features = df.copy()
@@ -73,6 +76,7 @@ def feature_extraction(df):
     df_features['Degree_Encoded'] = le_degree.fit_transform(df_features['Degree Program'])
 
     return df_features
+
 
 def mock_market_demand():
     # Test "Market Demand Analyzer" output
@@ -141,13 +145,12 @@ def Similarity_Measures(market_demand_skills):
 
     df_uni_score = uni_relevance_report.reset_index()
 
-
     print("\n--- FINAL CURRICULUM RELEVANCE SCORES PER UNIVERSITY ---")
     print(df_uni_score.to_markdown(index=False))
     return df_uni_score
 
-def plot_charts(df_uni_score,df_features,market_demand_skills):
 
+def plot_charts(df_uni_score, df_features, market_demand_skills):
     df_uni_score.plot(x='University', y=['Cosine_Relevance_%', 'Jaccard_Relevance_%', 'Fuzzy_Relevance_%'],
                       kind='bar', figsize=(12, 6))
 
@@ -185,11 +188,10 @@ def main():
     DataAnalysis(df)
     word_count_analysis(df)
     df = feature_extraction(df)
-
     mock_data = mock_market_demand()
     uni_score = Similarity_Measures(mock_data)
-    plot_charts(uni_score,df,mock_data)
+    plot_charts(uni_score, df, mock_data)
 
 
 if __name__ == '__main__':
-    main ()
+    main()
