@@ -16,7 +16,7 @@ y = df['title']
 label_encoder = LabelEncoder()
 y_encoded = label_encoder.fit_transform(y)
 
-# Train-test split  ✅ MUST COME BEFORE TRAINING
+# Train-test split 
 X_train, X_test, y_train, y_test = train_test_split(
     X,
     y_encoded,
@@ -625,5 +625,24 @@ plt.grid(axis='y')
 plt.tight_layout()
 plt.show()
 
+import joblib
+import os
 
+# create folder first
+os.makedirs("saved_models", exist_ok=True)
+
+metrics = {
+    "XGBoost": {
+        "accuracy": accuracy_score(y_test, y_pred_xgb)
+    },
+    "Gradient Boosting": {
+        "accuracy": accuracy_score(y_test, y_pred_gb)
+    }
+}
+
+joblib.dump(metrics, "saved_models/model_metrics.pkl")
+joblib.dump(best_xgb, "saved_models/best_xgb_model.pkl")
+joblib.dump(best_gb, "saved_models/best_gb_model.pkl")
+
+print("All models saved successfully!")
 

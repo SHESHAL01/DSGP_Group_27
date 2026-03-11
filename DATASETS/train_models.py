@@ -2,6 +2,9 @@ import pandas as pd
 import numpy as np
 import xgboost
 from pip._internal.commands import install
+import joblib
+import os
+
 
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
@@ -756,4 +759,40 @@ for rects in [rects1, rects2]:
 
 plt.tight_layout()
 plt.show()
+from sklearn.metrics import precision_score, recall_score, f1_score
+
+rf_precision = precision_score(y_test, y_pred_rf, average="macro")
+rf_recall = recall_score(y_test, y_pred_rf, average="macro")
+rf_f1 = f1_score(y_test, y_pred_rf, average="macro")
+
+metrics = {
+    "Random Forest": {
+        "accuracy": accuracy_score(y_test, y_pred_rf),
+        "precision": rf_precision,
+        "recall": rf_recall,
+        "f1": rf_f1
+    }
+}
+
+joblib.dump(metrics, "saved_models/model_metrics_rf.pkl")
+
+# Make folder if it doesn't exist
+os.makedirs("saved_models", exist_ok=True)
+
+# Save your trained model (best_rf)
+joblib.dump(best_rf, "saved_models/best_rf_model.pkl")
+print("Model saved successfully!")
+
+import joblib
+import os
+
+MODEL_PATH = "saved_models/best_rf_model.pkl"
+
+if not os.path.exists(MODEL_PATH):
+    raise FileNotFoundError(f"Model file not found at {MODEL_PATH}. Please save it first.")
+else:
+    rf_model = joblib.load(MODEL_PATH)
+    print("Model loaded successfully!")
+
+
 
