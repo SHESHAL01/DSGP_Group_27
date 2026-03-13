@@ -124,8 +124,11 @@ def predict():
     score, role_probs, alternative_roles = predict_employability(
         rf_model,
         user_vector,
-        preferred_role
+        preferred_role,
+        role_vectors,
+        feature_names
     )
+
     # Round alternative role scores
     alternative_roles = [
         (role, round(prob, 2)) for role, prob in alternative_roles
@@ -165,26 +168,43 @@ def predict():
     # Explainable AI
     # ===============================
 
-    important_features = explain_prediction(rf_model, feature_names)
+    import math
 
     important_skills = []
 
-    import math
+    role_vector = role_vectors[preferred_role]
 
-    for skill, importance in important_features:
-        if skill in user_skills:
+    for skill in user_skills:
+
+        if skill in feature_names:
+            idx = feature_names.index(skill)
+
+            role_value = role_vector[idx]
+
+            # importance = how important this skill is for the role
+            importance = role_value
+
             important_skills.append((skill, importance))
 
-    important_skills = important_skills[:4]
-
+    # Sort by importance
+    important_skills = sorted(
+        important_skills,
+        key=lambda x: x[1],
+        reverse=True
+    )[:4]
     # Log scaling for visualization
     scaled_skills = []
 
-    for skill, imp in important_skills:
-        scaled = math.log(imp + 1e-6) * -20  # spreads small values
-        scaled_skills.append(
-            (skill.replace("_", " ").title(), round(abs(scaled), 2))
-        )
+    if important_skills:
+
+        max_importance = max([imp for _, imp in important_skills])
+
+        for skill, imp in important_skills:
+            scaled = (imp / max_importance) * 85
+
+            scaled_skills.append(
+                (skill.replace("_", " ").title(), round(scaled, 2))
+            )
 
     important_skills = scaled_skills
 
