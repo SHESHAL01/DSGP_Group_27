@@ -162,8 +162,10 @@ def predict():
     )[:6]
 
     # keep only skill names
-    missing_skills = [skill for skill, _ in missing_skills]
-
+    missing_skills = [
+        skill.replace("_", " ").title()
+        for skill, _ in missing_skills
+    ]
     # ===============================
     # Explainable AI
     # ===============================
@@ -236,13 +238,14 @@ def predict():
             rf_model,
             user_vector,
             list(skill_set),
-            feature_names
+            feature_names,
+            role_vectors
         )
 
         new_score = round(sim_result.get(preferred_role, 0) * 100, 2)
 
         simulations.append({
-            "skills": " + ".join(skill_set),
+            "skills": " + ".join(skill.replace("_", " ").title()for skill in skill_set),
             "old_score": score,
             "new_score": new_score
         })
