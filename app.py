@@ -8,7 +8,7 @@ from employability import predict_employability
 from skill_gap import compute_role_skill_vectors, skill_gap_analysis
 from career_growth import simulate_career_growth
 from explainability import explain_prediction
-from model_loader import load_model
+
 
 app = Flask(__name__)
 
@@ -24,7 +24,7 @@ feature_names = dataset.drop(columns=["title"]).columns.tolist()
 # Load models
 # ===============================
 
-best_rf_model = load_model()
+best_rf_model = joblib.load("saved_models/best_rf_model.pkl")
 
 xgb_model = joblib.load("saved_models/best_xgb_model.pkl")
 gb_model = joblib.load("saved_models/best_gb_model.pkl")
