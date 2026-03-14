@@ -232,40 +232,44 @@ textarea {
 
 .perf-chart {
     display: flex;
-    align-items: flex-end;
-    justify-content: space-around;
-    gap: 20px;
-    flex: 1;
+    align-items: flex-end;   
+    justify-content: space-between;
+    gap: 20px;             
     padding-top: 20px;
     padding-bottom: 10px;
     height: 280px;
 }
 
-.perf-bar-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+
+.perf-bar-wrapper{
+    position: relative;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    min-height: 250px;
     flex: 1;
     height: 100%;
-    justify-content: flex-end;
+    padding-bottom: 3rem;
 }
 
 .perf-bar {
     position: relative;
-    width: 100%;
-    max-width: 70px;
+    width: 50px;          
     background: #b0b0b0;
     border-radius: 4px;
     display: flex;
     align-items: flex-start;
     justify-content: center;
     border: 2px solid #888;
+    margin-top: auto;
 }
+
 
 .perf-bar.highest {
     background: var(--accent-color);
     border-color: #007a66;
 }
+
 
 .perf-bar span {
     position: absolute;
@@ -277,15 +281,26 @@ textarea {
     font-weight: 600;
     white-space: nowrap;
 }
-
 .perf-bar-wrapper .label {
-    margin-top: 12px;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    padding: 0 6px;
     text-align: center;
     font-size: 14px;
     color: var(--text-primary);
     font-weight: 400;
+    line-height: 1.2;       
 }
-
+.bar-area{
+    height:200px;
+    width:100%;
+    display:flex;
+    align-items:flex-end;
+    justify-content:center;
+}
 .model-info {
     display: flex;
     gap: 30px;
@@ -411,7 +426,7 @@ textarea {
     left: 0;
     top: 0;
     height: 100%;
-    background: rgba(6, 76, 104, 0.349);
+    background: rgba(8, 116, 119, 0.662);
     border-radius: 8px;
     z-index: 2;
 }
