@@ -6,9 +6,7 @@ def predict_employability(model, user_vector, preferred_role, role_vectors, feat
 
     role_vector = role_vectors[preferred_role]
 
-    # ===============================
     # Filter irrelevant skills
-    # ===============================
 
     filtered_vector = np.array(user_vector) * (np.array(role_vector) > 0.3)
 
