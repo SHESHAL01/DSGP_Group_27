@@ -646,3 +646,18 @@ joblib.dump(best_gb, "saved_models/best_gb_model.pkl")
 
 print("All models saved successfully!")
 
+import joblib
+import os
+
+os.makedirs("saved_models", exist_ok=True)
+
+youden_metrics = {
+    "Gradient Boosting": youden_gb.tolist(),
+    "XGBoost": youden_xgb.tolist()
+}
+
+joblib.dump(youden_metrics, "saved_models/youden_gb_xgb.pkl")
+
+print("Youden metrics saved.")
+
+
