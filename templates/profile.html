@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillSync - My Profile</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='skillsync.css') }}">
+    <style>
+        .profile-container {
+            max-width: 800px;
+            margin: 60px auto;
+        }
+        
+        .profile-header {
+            background: var(--card-bg);
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+        
+        .profile-name {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .profile-email {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+        
+        .profile-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+        }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent-color);
+        }
+        
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        
+        .activities-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 40px;
+        }
+        
+        .activities-section h3 {
+            margin-bottom: 30px;
+        }
+        
+        .activity-item {
+            padding: 20px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-type {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .activity-prediction { background: rgba(0, 224, 198, 0.1); color: var(--accent-color); }
+        .activity-recommendation { background: rgba(255, 193, 7, 0.1); color: #ffc107; }
+        .activity-login { background: rgba(76, 175, 80, 0.1); color: #4CAF50; }
+        .activity-register { background: rgba(33, 150, 243, 0.1); color: #2196F3; }
+        
+        .activity-details {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .activity-time {
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .no-activities {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <img src="{{ url_for('static', filename='Skill Sync Logo.png') }}" alt="SkillSync Logo">
+        </div>
+        <nav class="navbar">
+            <ul>
+                <li><a href="{{ url_for('skillsync_home') }}">Home</a></li>
+                <li><a href="{{ url_for('explore') }}">Explore</a></li>
+                <li><a href="{{ url_for('recommendation_page') }}">Recommendations</a></li>
+                <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                <li><a href="{{ url_for('profile') }}" style="color: var(--accent-color);">Profile</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <div class="profile-container">
+            <div class="profile-header">
+                <h1 class="profile-name">{{ user.name }}</h1>
+                <p class="profile-email">{{ user.email }}</p>
+                <p style="color: var(--text-secondary); font-size: 14px;">
+                    Member since: {{ user.created_at.strftime('%B %d, %Y') if user.created_at else 'N/A' }}
+                </p>
+                {% if user.last_login %}
+                <p style="color: var(--text-secondary); font-size: 14px;">
+                    Last login: {{ user.last_login.strftime('%B %d, %Y at %I:%M %p') }}
+                </p>
+                {% endif %}
+                
+                <div class="profile-stats">
+                    <div class="stat-item">
+                        <div class="stat-value">{{ activities|length }}</div>
+                        <div class="stat-label">Recent Activities</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ activities|selectattr('activity_type', 'equalto', 'prediction')|list|length }}</div>
+                        <div class="stat-label">Predictions</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value">{{ activities|selectattr('activity_type', 'equalto', 'recommendation')|list|length }}</div>
+                        <div class="stat-label">Recommendations</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="activities-section">
+                <h3>Recent Activity</h3>
+                
+                {% if activities %}
+                    {% for activity in activities %}
+                    <div class="activity-item">
+                        <span class="activity-type activity-{{ activity.activity_type }}">
+                            {{ activity.activity_type|upper }}
+                        </span>
+                        
+                        <div class="activity-details">
+                            {% if activity.activity_type == 'prediction' %}
+                                <strong>Job Role:</strong> {{ activity.job_role }}<br>
+                                <strong>Skills:</strong> {{ activity.skills }}<br>
+                                <strong>Score:</strong> {{ activity.score }}%
+                            {% elif activity.activity_type == 'recommendation' %}
+                                <strong>Job Role:</strong> {{ activity.job_role }}<br>
+                                <strong>Skills:</strong> {{ activity.skills }}
+                            {% elif activity.activity_type == 'login' %}
+                                <strong>Logged in to SkillSync</strong>
+                            {% elif activity.activity_type == 'register' %}
+                                <strong>Joined SkillSync</strong>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="activity-time">
+                            {{ activity.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-activities">
+                        <p>No activity yet. Start using SkillSync!</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        © 2026 SkillSync | All Rights Reserved
+    </footer>
+</body>
+</html>
