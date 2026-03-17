@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SkillSync - Education-Industry Alignment Analysis</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -17,9 +17,9 @@
         <nav class="navbar">
             <ul>
                 <li><a href="{{ url_for('skillsync_home') }}">Home</a></li>
-                <li><a href="{{ url_for('explore') }}">Explore</a></li>
-                <li><a href="{{ url_for('recommendation_page') }}">Recommendations</a></li>
-                <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                <li><a href="{{ url_for('recommendation_page') }}">Market Analysis</a></li>
+                <li><a href="{{ url_for('education_alignment') }}">Edu Analysis</a></li>
+                <li><a href="{{ url_for('employability_page') }}">Employability</a></li>
                 {% if user %}
                 <li><a href="{{ url_for('profile') }}" style="color: var(--accent-color);">Profile</a></li>
                 <li><a href="{{ url_for('logout') }}">Logout</a></li>
@@ -191,6 +191,6 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="script.js"></script>
+    <script src="static/script.js"></script>
 </body>
 </html>

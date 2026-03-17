@@ -473,23 +473,6 @@ def predict_skills():
         "mismatches": missing_skills_display,
         "match_percent": match_percent
     })
-
-@app.route("/explore")
-def explore():
-    if 'user_id' not in session:
-        flash('Please log in to explore', 'error')
-        return redirect(url_for('login'))
-    
-    return render_template("explore.html", user={'name': session['user_name']})
-
-@app.route("/contact")
-def contact():
-    if 'user_id' not in session:
-        flash('Please log in to contact us', 'error')
-        return redirect(url_for('login'))
-    
-    return render_template("contact.html", user={'name': session['user_name']})
-
 @app.route("/education_alignment")
 def education_alignment():
     if 'user_id' not in session:
