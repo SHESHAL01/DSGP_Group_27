@@ -74,6 +74,9 @@ def init_db():
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
     
+    # Enable foreign keys
+    c.execute('PRAGMA foreign_keys = ON')
+    
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   name TEXT NOT NULL,
@@ -90,7 +93,7 @@ def init_db():
                   skills TEXT,
                   score FLOAT,
                   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                  FOREIGN KEY (user_id) REFERENCES users (id))''')
+                  FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE)''')
     
     conn.commit()
     conn.close()
@@ -98,25 +101,52 @@ def init_db():
 init_db()
 
 def log_activity(user_id, activity_type, job_role=None, skills=None, score=None):
-    conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-    c.execute('''INSERT INTO user_activities (user_id, activity_type, job_role, skills, score)
-                 VALUES (?, ?, ?, ?, ?)''',
-              (user_id, activity_type, job_role, skills, score))
-    conn.commit()
-    conn.close()
+    try:
+        conn = sqlite3.connect('users.db')
+        c = conn.cursor()
+        c.execute('''INSERT INTO user_activities (user_id, activity_type, job_role, skills, score, created_at)
+                     VALUES (?, ?, ?, ?, ?, ?)''',
+                  (user_id, activity_type, job_role, skills, score, datetime.now()))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Error logging activity: {e}")
 
 def get_user_activities(user_id, limit=50):
-    conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-    c.execute('''SELECT activity_type, job_role, skills, score, created_at 
-                 FROM user_activities 
-                 WHERE user_id = ? 
-                 ORDER BY created_at DESC 
-                 LIMIT ?''', (user_id, limit))
-    activities = c.fetchall()
-    conn.close()
-    return activities
+    try:
+        conn = sqlite3.connect('users.db')
+        c = conn.cursor()
+        c.execute('''SELECT activity_type, job_role, skills, score, created_at 
+                     FROM user_activities 
+                     WHERE user_id = ? 
+                     ORDER BY created_at DESC 
+                     LIMIT ?''', (user_id, limit))
+        activities = c.fetchall()
+        conn.close()
+        return activities
+    except Exception as e:
+        print(f"Error fetching activities: {e}")
+        return []
+
+def parse_datetime_safe(dt_value):
+    """Safely parse datetime from string or return as is"""
+    if dt_value is None:
+        return None
+    if isinstance(dt_value, datetime):
+        return dt_value
+    if isinstance(dt_value, str):
+        try:
+            # Try different datetime formats
+            return datetime.strptime(dt_value, '%Y-%m-%d %H:%M:%S.%f')
+        except ValueError:
+            try:
+                return datetime.strptime(dt_value, '%Y-%m-%d %H:%M:%S')
+            except ValueError:
+                try:
+                    return datetime.fromisoformat(dt_value)
+                except ValueError:
+                    return datetime.now()
+    return datetime.now()
 
 # ===============================
 # AUTHENTICATION ROUTES
@@ -146,8 +176,8 @@ def login():
             
             c.execute('UPDATE users SET last_login = ? WHERE id = ?', 
                      (datetime.now(), user[0]))
-            c.execute('''INSERT INTO user_activities (user_id, activity_type)
-                         VALUES (?, ?)''', (user[0], 'login'))
+            c.execute('''INSERT INTO user_activities (user_id, activity_type, created_at)
+                         VALUES (?, ?, ?)''', (user[0], 'login', datetime.now()))
             
             conn.commit()
             conn.close()
@@ -178,8 +208,8 @@ def register():
                      (name, email, hashed_password, datetime.now()))
             user_id = c.lastrowid
             
-            c.execute('''INSERT INTO user_activities (user_id, activity_type)
-                         VALUES (?, ?)''', (user_id, 'register'))
+            c.execute('''INSERT INTO user_activities (user_id, activity_type, created_at)
+                         VALUES (?, ?, ?)''', (user_id, 'register', datetime.now()))
             
             conn.commit()
             conn.close()
@@ -208,36 +238,50 @@ def profile():
         flash('Please log in to view your profile', 'error')
         return redirect(url_for('login'))
     
-    conn = sqlite3.connect('users.db')
-    c = conn.cursor()
-    
-    c.execute('SELECT name, email, created_at, last_login FROM users WHERE id = ?', 
-             (session['user_id'],))
-    user = c.fetchone()
-    
-    activities_raw = get_user_activities(session['user_id'])
-    
-    activities = []
-    for act in activities_raw:
-        activity = {
-            'activity_type': act[0],
-            'job_role': act[1] if act[1] else 'N/A',
-            'skills': act[2] if act[2] else 'N/A',
-            'score': act[3] if act[3] else 'N/A',
-            'created_at': datetime.fromisoformat(act[4]) if isinstance(act[4], str) else act[4]
+    try:
+        conn = sqlite3.connect('users.db')
+        c = conn.cursor()
+        
+        # Get user info
+        c.execute('SELECT name, email, created_at, last_login FROM users WHERE id = ?', 
+                 (session['user_id'],))
+        user = c.fetchone()
+        
+        if not user:
+            conn.close()
+            flash('User not found', 'error')
+            return redirect(url_for('logout'))
+        
+        # Get activities
+        activities_raw = get_user_activities(session['user_id'])
+        
+        activities = []
+        for act in activities_raw:
+            activity = {
+                'activity_type': act[0],
+                'job_role': act[1] if act[1] else 'N/A',
+                'skills': act[2] if act[2] else 'N/A',
+                'score': act[3] if act[3] else 'N/A',
+                'created_at': parse_datetime_safe(act[4])
+            }
+            activities.append(activity)
+        
+        conn.close()
+        
+        # Parse user datetimes
+        user_dict = {
+            'name': user[0],
+            'email': user[1],
+            'created_at': parse_datetime_safe(user[2]),
+            'last_login': parse_datetime_safe(user[3])
         }
-        activities.append(activity)
-    
-    conn.close()
-    
-    user_dict = {
-        'name': user[0],
-        'email': user[1],
-        'created_at': datetime.fromisoformat(user[2]) if isinstance(user[2], str) else user[2],
-        'last_login': datetime.fromisoformat(user[3]) if isinstance(user[3], str) else user[3]
-    }
-    
-    return render_template('profile.html', user=user_dict, activities=activities)
+        
+        return render_template('profile.html', user=user_dict, activities=activities)
+        
+    except Exception as e:
+        print(f"Error in profile route: {e}")
+        flash('An error occurred while loading your profile', 'error')
+        return redirect(url_for('skillsync_home'))
 
 # ===============================
 # MAIN ROUTES
@@ -316,7 +360,7 @@ def predict():
         status = "Needs Skill Improvement"
 
     # ===============================
-    # Skill Gap Analysis (USING YOUR ACTUAL MODEL)
+    # Skill Gap Analysis
     # ===============================
 
     role_vector = role_vectors[preferred_role]
@@ -330,7 +374,7 @@ def predict():
     missing_skills = missing_skills_full[:6]
     missing_skills_display = [skill.replace("_", " ").title() for skill, _ in missing_skills]
     
-    # Store the raw missing skills (with underscores) in session for recommendation page
+    # Store in session
     session['last_missing_skills'] = [skill for skill, _ in missing_skills_full[:10]]
     session['last_job_role'] = preferred_role
     session['last_user_skills'] = skills_text
@@ -366,7 +410,7 @@ def recommendation_page():
         flash('Please log in to access recommendations', 'error')
         return redirect(url_for('login'))
     
-    # Get parameters from URL (coming from employability page)
+    # Get parameters from URL
     preferred_job = request.args.get("job_role")
     user_skills_input = request.args.get("skills", "")
     
@@ -387,11 +431,11 @@ def recommendation_page():
             user={'name': session['user_name']}
         )
     
-    # Get missing skills from session (these are the REAL skill gaps from your model)
+    # Get missing skills from session
     missing_skills = session.get('last_missing_skills', [])
     
     if not missing_skills:
-        # If session doesn't have missing skills, recalculate them
+        # Recalculate if needed
         user_skills = [s.strip().lower() for s in user_skills_input.split(",")]
         user_vector = build_user_vector(user_skills, feature_names)
         role_vector = role_vectors[preferred_job]
@@ -403,16 +447,14 @@ def recommendation_page():
         )
         missing_skills = [skill for skill, _ in missing_skills_full[:10]]
     
-    # Calculate match percentage (just for display)
+    # Calculate match percentage
     match_percent = 0
     if missing_skills:
-        # This is a rough estimate - you could calculate this differently
         role_vector = role_vectors[preferred_job]
         total_relevant = sum(1 for v in role_vector if v > 0.3)
         match_percent = int((total_relevant - len(missing_skills)) / total_relevant * 100) if total_relevant > 0 else 0
     
-    # Get course recommendations for missing skills (using your final_DS.csv)
-    from recommend_courses import get_course_recommendations
+    # Get course recommendations
     recommendations = get_course_recommendations(missing_skills, preferred_job)
     
     # Clean skill names for display
@@ -437,7 +479,6 @@ def recommendation_page():
         user={'name': session['user_name']}
     )
 
-# AJAX endpoint for "Get Prediction" (used by employability.html)
 @app.route('/predict_skills', methods=['POST'])
 def predict_skills():
     if 'user_id' not in session:
@@ -448,7 +489,7 @@ def predict_skills():
     user_skills_input = data.get("skills", "")
     user_skills = [s.strip().lower() for s in user_skills_input.split(",")]
     
-    # Use your actual model to get skill gaps
+    # Use actual model to get skill gaps
     user_vector = build_user_vector(user_skills, feature_names)
     role_vector = role_vectors[preferred_job]
     
@@ -460,12 +501,12 @@ def predict_skills():
     
     missing_skills_display = [skill.replace('_', ' ').title() for skill, _ in missing_skills_full[:6]]
     
-    # Store in session for recommendation page
+    # Store in session
     session['last_missing_skills'] = [skill for skill, _ in missing_skills_full[:10]]
     session['last_job_role'] = preferred_job
     session['last_user_skills'] = user_skills_input
     
-    # Calculate a simple match percentage (optional)
+    # Calculate match percentage
     total_relevant = sum(1 for v in role_vector if v > 0.3)
     match_percent = int((total_relevant - len(missing_skills_full)) / total_relevant * 100) if total_relevant > 0 else 0
     
@@ -473,6 +514,7 @@ def predict_skills():
         "mismatches": missing_skills_display,
         "match_percent": match_percent
     })
+
 @app.route("/education_alignment")
 def education_alignment():
     if 'user_id' not in session:
@@ -480,6 +522,14 @@ def education_alignment():
         return redirect(url_for('login'))
     
     return render_template("index.html", user={'name': session['user_name']})
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('404.html'), 404
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template('500.html'), 500
 
 if __name__ == "__main__":
     app.run(debug=True)

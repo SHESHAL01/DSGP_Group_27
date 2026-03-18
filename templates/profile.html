@@ -90,6 +90,7 @@
         .activity-recommendation { background: rgba(255, 193, 7, 0.1); color: #ffc107; }
         .activity-login { background: rgba(76, 175, 80, 0.1); color: #4CAF50; }
         .activity-register { background: rgba(33, 150, 243, 0.1); color: #2196F3; }
+        .activity-logout { background: rgba(244, 67, 54, 0.1); color: #f44336; }
         
         .activity-details {
             color: var(--text-secondary);
@@ -117,9 +118,9 @@
         <nav class="navbar">
             <ul>
                 <li><a href="{{ url_for('skillsync_home') }}">Home</a></li>
-                <li><a href="{{ url_for('explore') }}">Explore</a></li>
-                <li><a href="{{ url_for('recommendation_page') }}">Recommendations</a></li>
-                <li><a href="{{ url_for('contact') }}">Contact</a></li>
+                <li><a href="{{ url_for('recommendation_page') }}">Market Analysis</a></li>
+                <li><a href="{{ url_for('education_alignment') }}">Edu Analysis</a></li>
+                <li><a href="{{ url_for('employability_page') }}">Employability</a></li>
                 <li><a href="{{ url_for('profile') }}" style="color: var(--accent-color);">Profile</a></li>
                 <li><a href="{{ url_for('logout') }}">Logout</a></li>
             </ul>
@@ -178,6 +179,8 @@
                                 <strong>Logged in to SkillSync</strong>
                             {% elif activity.activity_type == 'register' %}
                                 <strong>Joined SkillSync</strong>
+                            {% elif activity.activity_type == 'logout' %}
+                                <strong>Logged out of SkillSync</strong>
                             {% endif %}
                         </div>
                         
