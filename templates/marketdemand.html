@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillSync – Market Demand Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='marketdemand.css') }}">
+</head>
+
+<body>
+
+<header class="header">
+    <div class="logo">
+        <img src="{{ url_for('static', filename='Skill Sync Logo.png') }}" alt="SkillSync Logo">
+    </div>
+
+    <nav class="navbar">
+        <ul>
+            <li><a href="{{ url_for('skillsync_home') }}">Home</a></li>
+            <li><a href="#" style="color: var(--accent-color);">Market Analysis</a></li>
+            <li><a href="{{ url_for('education_alignment') }}">Edu Analysis</a></li>
+            <li><a href="{{ url_for('employability_page') }}">Employability</a></li>
+            <li><a href="{{ url_for('profile') }}">Profile</a></li>
+            <li><a href="{{ url_for('logout') }}">Logout</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main class="container">
+
+    <!-- HERO -->
+    <section class="hero">
+        <h1>Market Demand Analyzer</h1>
+        <p>Understand which skills employers in Sri Lanka value most for your role.</p>
+    </section>
+
+    <!-- INPUT CARD -->
+    <section class="control-panel">
+        <div class="control-content">
+            <select id="roleSelect">
+                <option value="software engineer">Software Engineer</option>
+                <option value="qa engineer">QA Engineer</option>
+                <option value="cybersecurity engineer">Cyber-Security Engineer</option>
+                <option value="data engineer">Data Engineer</option>
+                <option value="devops engineer">DevOps Engineer</option>
+                <option value="embedded engineer">Embedded Engineer</option>
+                <option value="data scientist">Data Scientist</option>
+                <option value="data analyst">Data Analyst</option>
+                <option value="database administrator">Database Administrator</option>
+            </select>
+
+            <button onclick="getSkills()" class="btn-primary">
+                Analyze Market Demand
+            </button>
+        </div>
+    </section>
+
+    <!-- RESULTS -->
+    <section id="results" class="results-section placeholder">
+        <p class="placeholder-text">
+            Select a role to view the most in-demand skills in the current job market.
+        </p>
+    </section>
+
+</main>
+
+<footer class="footer">
+    © 2026 SkillSync | All Rights Reserved
+</footer>
+
+<script>
+async function getSkills() {
+    // Fixed: Changed from "roleInput" to "roleSelect" to match the select element ID
+    const roleSelect = document.getElementById("roleSelect");
+    const role = roleSelect.value;
+
+    // Show loading state
+    const resultsSection = document.getElementById("results");
+    resultsSection.innerHTML = '<p class="placeholder-text">Loading market data...</p>';
+    resultsSection.classList.remove('placeholder');
+
+    try {
+        const response = await fetch("/market_demand", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({role: role})
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        
+        // Display the skills in a nice format
+        if (data.skills && data.skills.length > 0) {
+            let skillsHtml = '<h2>Top In-Demand Skills</h2><div class="skills-cards">';
+            
+            data.skills.forEach(skill => {
+                skillsHtml += `
+                    <div class="skill-card">
+                        ${skill.name}
+                        <small style="display: block; color: var(--accent-color); margin-top: 8px;">${skill.demand}% demand</small>
+                    </div>
+                `;
+            });
+            
+            skillsHtml += '</div>';
+            resultsSection.innerHTML = skillsHtml;
+        } else {
+            resultsSection.innerHTML = '<p class="placeholder-text">No market data available for this role.</p>';
+        }
+        
+    } catch (error) {
+        console.error('Error:', error);
+        resultsSection.innerHTML = '<p class="placeholder-text">Error loading market data. Please try again.</p>';
+    }
+}
+</script>
+
+</body>
+</html>

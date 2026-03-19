@@ -302,12 +302,13 @@ def employability_page():
     if 'user_id' not in session:
         flash('Please log in to access the employability predictor', 'error')
         return redirect(url_for('login'))
-    
+
+    default_important_skills = []    
     return render_template(
         "employability.html",
         score=0,
         status="Waiting for input",
-        important_skills=[],
+        important_skills=default_important_skills,
         alternative_roles=[],
         missing_skills=[],
         lower1=0,
@@ -374,6 +375,25 @@ def predict():
     missing_skills = missing_skills_full[:6]
     missing_skills_display = [skill.replace("_", " ").title() for skill, _ in missing_skills]
     
+    # ===============================
+    # Calculate Important Skills (Skill Importance)
+    # ===============================
+    
+    # Get the top important skills for the preferred role
+    # This identifies which skills are most critical for this role
+    important_skills_data = []
+    
+    # Get the role vector and sort by importance (highest values first)
+    role_vector_with_names = [(feature_names[i], role_vector[i]) for i in range(len(feature_names))]
+    # Filter out skills with zero importance and sort by importance
+    important_skills_sorted = sorted(
+        [(skill, round(importance * 100, 1)) for skill, importance in role_vector_with_names if importance > 0.3],
+        key=lambda x: x[1], 
+        reverse=True
+    )[:8]  # Get top 8 important skills
+    
+    important_skills_data = important_skills_sorted
+    
     # Store in session
     session['last_missing_skills'] = [skill for skill, _ in missing_skills_full[:10]]
     session['last_job_role'] = preferred_role
@@ -392,7 +412,7 @@ def predict():
         "employability.html",
         score=score,
         status=status,
-        important_skills=[],
+        important_skills=important_skills_data,  # Now passing actual data
         alternative_roles=alternative_roles,
         missing_skills=missing_skills_display,
         lower1=score,
@@ -514,6 +534,100 @@ def predict_skills():
         "mismatches": missing_skills_display,
         "match_percent": match_percent
     })
+
+@app.route("/market_demand", methods=["POST"])
+def market_demand():
+    if 'user_id' not in session:
+        return jsonify({"error": "Please log in"}), 401
+    
+    data = request.get_json()
+    role = data.get("role", "").lower()
+    
+    # This is sample data - you should replace this with actual data from your database or API
+    # You can fetch this data from a database, CSV file, or external API
+    
+    # Sample market demand data for different roles
+    market_data = {
+        "software engineer": [
+            {"name": "Python", "demand": 85},
+            {"name": "JavaScript", "demand": 82},
+            {"name": "React", "demand": 78},
+            {"name": "Java", "demand": 75},
+            {"name": "SQL", "demand": 70},
+            {"name": "AWS", "demand": 65},
+            {"name": "Docker", "demand": 60},
+            {"name": "Git", "demand": 55}
+        ],
+        "data scientist": [
+            {"name": "Python", "demand": 90},
+            {"name": "Machine Learning", "demand": 85},
+            {"name": "SQL", "demand": 75},
+            {"name": "Statistics", "demand": 70},
+            {"name": "TensorFlow", "demand": 65},
+            {"name": "R", "demand": 60},
+            {"name": "Data Visualization", "demand": 55},
+            {"name": "Deep Learning", "demand": 50}
+        ],
+        "data analyst": [
+            {"name": "SQL", "demand": 88},
+            {"name": "Excel", "demand": 85},
+            {"name": "Python", "demand": 75},
+            {"name": "Tableau", "demand": 70},
+            {"name": "Power BI", "demand": 68},
+            {"name": "Statistics", "demand": 65},
+            {"name": "Data Visualization", "demand": 60},
+            {"name": "R", "demand": 55}
+        ],
+        "devops engineer": [
+            {"name": "Docker", "demand": 85},
+            {"name": "Kubernetes", "demand": 82},
+            {"name": "AWS", "demand": 80},
+            {"name": "CI/CD", "demand": 78},
+            {"name": "Jenkins", "demand": 75},
+            {"name": "Linux", "demand": 70},
+            {"name": "Terraform", "demand": 65},
+            {"name": "Ansible", "demand": 60}
+        ],
+        "qa engineer": [
+            {"name": "Selenium", "demand": 80},
+            {"name": "Test Automation", "demand": 78},
+            {"name": "JUnit", "demand": 70},
+            {"name": "Python", "demand": 65},
+            {"name": "Java", "demand": 60},
+            {"name": "JMeter", "demand": 55},
+            {"name": "Cucumber", "demand": 50},
+            {"name": "TestNG", "demand": 45}
+        ]
+    }
+    
+    # Get data for the requested role, or provide default data
+    skills = market_data.get(role, [
+        {"name": "Python", "demand": 80},
+        {"name": "SQL", "demand": 75},
+        {"name": "JavaScript", "demand": 70},
+        {"name": "Communication", "demand": 65},
+        {"name": "Problem Solving", "demand": 60},
+        {"name": "Teamwork", "demand": 55}
+    ])
+    
+    # Log the activity
+    log_activity(
+        session['user_id'],
+        'market_analysis',
+        role,
+        None,
+        None
+    )
+    
+    return jsonify({"skills": skills})
+
+@app.route("/market-demand")
+def market_demand_page():
+    if 'user_id' not in session:
+        flash('Please log in to access market demand analysis', 'error')
+        return redirect(url_for('login'))
+    
+    return render_template("marketdemand.html", user={'name': session['user_name']})
 
 @app.route("/education_alignment")
 def education_alignment():
