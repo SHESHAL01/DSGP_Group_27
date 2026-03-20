@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import LabelEncoder, StandardScaler
 from fuzzywuzzy import fuzz
 import matplotlib.pyplot as plt
 import logging
@@ -54,31 +53,6 @@ def clean_data(df):
     # Fixing inconsistent data
     df['Degree Program'] = df['Degree Program'].str.strip().str.lower().str.capitalize()
     df['Course Name'] = df['Course Name'].str.strip().str.lower().str.capitalize()
-
-
-def word_count_analysis(df):
-    print("COURSE NAME ANALYSIS")
-    course_name_lengths = df['Course Name'].str.len()
-    print(f"Average Course Name Length: {course_name_lengths.mean():.2f} characters")
-    print(f"Min Length: {course_name_lengths.min()}")
-    print(f"Max Length: {course_name_lengths.max()}")
-
-    word_counts = df['Course Name'].str.split().str.len()
-    print(f"\nAverage Words in Course Name: {word_counts.mean():.2f}")
-
-
-def feature_extraction(df):
-    df_features = df.copy()
-
-    print("\nENCODING CATEGORICAL VARIABLES")
-
-    le_university = LabelEncoder()
-    le_degree = LabelEncoder()
-
-    df_features['University_Encoded'] = le_university.fit_transform(df_features['University'])
-    df_features['Degree_Encoded'] = le_degree.fit_transform(df_features['Degree Program'])
-
-    return df_features
 
 
 def mock_market_demand():
