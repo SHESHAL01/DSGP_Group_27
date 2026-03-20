@@ -1,0 +1,437 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="8935a41b-8f4d-44ac-ab51-539352ba9e07" name="Changes" comment="add exception handling">
+      <change afterPath="$PROJECT_DIR$/test.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/C4.py" beforeDir="false" afterPath="$PROJECT_DIR$/C4.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;SHESHAL01&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/SHESHAL01/DSGP_Group_27.git&quot;,
+    &quot;accountId&quot;: &quot;5175c09f-a4b7-425a-b9eb-4bc94c2c3081&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
+  <component name="ProjectId" id="36Vm3oUi49Li7puWbimbG2zPqsN" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;Python tests.Python tests for test.TestCourseModel.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Python tests for test.TestCourseModel.test_create_positive_pairs.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Python tests for test.TestCourseModel.test_parse_skills_list.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Python tests for test.TestCourseModel.test_retrieve_top_k_courses.executor&quot;: &quot;Run&quot;,
+    &quot;Python tests.Python tests in test.py.executor&quot;: &quot;Run&quot;,
+    &quot;Python.C4.executor&quot;: &quot;Run&quot;,
+    &quot;Python.Component_4.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;#1 on Recommendation-System&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RunManager" selected="Python.C4">
+    <configuration name="C4" type="PythonConfigurationType" factoryName="Python" nameIsGenerated="true">
+      <module name="PythonProject" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="SDK_NAME" value="Python 3.9 (PythonProject)" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/C4.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Python tests for test.TestCourseModel" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="PythonProject" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;test.TestCourseModel&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Python tests for test.TestCourseModel.test_create_positive_pairs" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="PythonProject" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;test.TestCourseModel.test_create_positive_pairs&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Python tests for test.TestCourseModel.test_parse_skills_list" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="PythonProject" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;test.TestCourseModel.test_parse_skills_list&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Python tests for test.TestCourseModel.test_retrieve_top_k_courses" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="PythonProject" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;test.TestCourseModel.test_retrieve_top_k_courses&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Python tests in test.py" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="PythonProject" />
+      <option name="ENV_FILES" value="" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/test.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python tests.Python tests for test.TestCourseModel" />
+        <item itemvalue="Python tests.Python tests in test.py" />
+        <item itemvalue="Python tests.Python tests for test.TestCourseModel.test_parse_skills_list" />
+        <item itemvalue="Python tests.Python tests for test.TestCourseModel.test_create_positive_pairs" />
+        <item itemvalue="Python tests.Python tests for test.TestCourseModel.test_retrieve_top_k_courses" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-3aa1da707db6-JavaScript-PY-252.26830.99" />
+        <option value="bundled-python-sdk-164cda30dcd9-0af03a5fa574-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-252.26830.99" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="8935a41b-8f4d-44ac-ab51-539352ba9e07" name="Changes" comment="" />
+      <created>1765099919021</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1765099919021</updated>
+      <workItem from="1765099920044" duration="5389000" />
+      <workItem from="1765106533684" duration="1399000" />
+      <workItem from="1765120955532" duration="1395000" />
+      <workItem from="1765162396222" duration="2149000" />
+      <workItem from="1766475874702" duration="2665000" />
+      <workItem from="1766636616351" duration="7391000" />
+      <workItem from="1766808940112" duration="902000" />
+      <workItem from="1766843125866" duration="1680000" />
+      <workItem from="1767011401632" duration="3070000" />
+      <workItem from="1767402674188" duration="3293000" />
+      <workItem from="1767772369124" duration="4948000" />
+      <workItem from="1767777567272" duration="4420000" />
+      <workItem from="1767805252416" duration="1701000" />
+      <workItem from="1767846925475" duration="2010000" />
+      <workItem from="1768273219963" duration="6453000" />
+      <workItem from="1768487887412" duration="5441000" />
+      <workItem from="1768657370409" duration="4840000" />
+      <workItem from="1768755022858" duration="1112000" />
+      <workItem from="1768796016777" duration="6745000" />
+      <workItem from="1768895608190" duration="26000" />
+      <workItem from="1769069653601" duration="1893000" />
+      <workItem from="1769133603606" duration="4388000" />
+      <workItem from="1769396178195" duration="3704000" />
+      <workItem from="1769479172446" duration="62000" />
+      <workItem from="1769777751388" duration="3995000" />
+      <workItem from="1769916173329" duration="3358000" />
+      <workItem from="1769998672961" duration="4927000" />
+      <workItem from="1770142858141" duration="3515000" />
+      <workItem from="1770204857079" duration="1524000" />
+      <workItem from="1770346949318" duration="8528000" />
+      <workItem from="1770380384637" duration="595000" />
+      <workItem from="1770404544605" duration="8238000" />
+      <workItem from="1770490745741" duration="3517000" />
+      <workItem from="1770568382353" duration="10272000" />
+      <workItem from="1770730355370" duration="6239000" />
+      <workItem from="1770764228426" duration="132000" />
+      <workItem from="1770818205226" duration="6513000" />
+      <workItem from="1770883388029" duration="1440000" />
+      <workItem from="1770913404307" duration="12409000" />
+      <workItem from="1771077001476" duration="21044000" />
+      <workItem from="1771161433607" duration="13507000" />
+      <workItem from="1771331291623" duration="2775000" />
+      <workItem from="1771379185559" duration="389000" />
+      <workItem from="1771380841512" duration="315000" />
+      <workItem from="1771418388676" duration="10340000" />
+      <workItem from="1771506461113" duration="13103000" />
+      <workItem from="1771569661548" duration="8075000" />
+      <workItem from="1771590067838" duration="2994000" />
+      <workItem from="1771598016829" duration="3701000" />
+      <workItem from="1771607590053" duration="29378000" />
+      <workItem from="1771735994985" duration="3702000" />
+      <workItem from="1771756902211" duration="21665000" />
+      <workItem from="1772037216290" duration="42819000" />
+      <workItem from="1772254378566" duration="11387000" />
+      <workItem from="1772334554517" duration="4146000" />
+      <workItem from="1772377355671" duration="243000" />
+      <workItem from="1772419356236" duration="1431000" />
+      <workItem from="1772463508458" duration="1125000" />
+      <workItem from="1772815839897" duration="2120000" />
+      <workItem from="1772870346780" duration="11438000" />
+      <workItem from="1772985120783" duration="3219000" />
+      <workItem from="1773024594706" duration="81000" />
+      <workItem from="1773025074218" duration="3283000" />
+      <workItem from="1773032546078" duration="738000" />
+      <workItem from="1773046851517" duration="380000" />
+      <workItem from="1773325723252" duration="8000" />
+      <workItem from="1773411659634" duration="1712000" />
+      <workItem from="1773494572533" duration="7479000" />
+      <workItem from="1773627713476" duration="3173000" />
+      <workItem from="1773996859845" duration="324000" />
+    </task>
+    <task id="LOCAL-00001" summary="Import final dataset and preprocess for use sentence transformer">
+      <option name="closed" value="true" />
+      <created>1765105443002</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1765105443002</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Import final dataset and preprocess for use sentence transformer">
+      <option name="closed" value="true" />
+      <created>1765105688763</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1765105688763</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Import final dataset and preprocess for use sentence transformer">
+      <option name="closed" value="true" />
+      <created>1765106798769</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1765106798769</updated>
+    </task>
+    <task id="LOCAL-00004" summary="import 4  versions of sentence transformer. created a function to convert text to numerical vectors(embedding).">
+      <option name="closed" value="true" />
+      <created>1766649888839</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1766649888839</updated>
+    </task>
+    <task id="LOCAL-00005" summary="Update the code to automatically create sentence pairs. these pairs need to fine tune the model later.">
+      <option name="closed" value="true" />
+      <created>1767013052430</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1767013052430</updated>
+    </task>
+    <task id="LOCAL-00006" summary="add a function to evaluate 3 sentence transformer models. and compair their recall scores to find the best model.">
+      <option name="closed" value="true" />
+      <created>1767418225785</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1767418225785</updated>
+    </task>
+    <task id="LOCAL-00007" summary="fine-tuned all models and update the code for print before and after recall values.">
+      <option name="closed" value="true" />
+      <created>1767776534783</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1767776534783</updated>
+    </task>
+    <task id="LOCAL-00008" summary="optimize sentence-transformer training by limiting training pairs">
+      <option name="closed" value="true" />
+      <created>1768282570768</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1768282570768</updated>
+    </task>
+    <task id="LOCAL-00009" summary="update code to fine-tune selected model after comparing recall scores from base models">
+      <option name="closed" value="true" />
+      <created>1768533994440</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1768533994440</updated>
+    </task>
+    <task id="LOCAL-00010" summary="update code to save the fine_tuned model in local storage.">
+      <option name="closed" value="true" />
+      <created>1768661615289</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1768661615289</updated>
+    </task>
+    <task id="LOCAL-00011" summary="add function to create course embedding">
+      <option name="closed" value="true" />
+      <created>1769138299844</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1769138299845</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Added precision to evaluate models">
+      <option name="closed" value="true" />
+      <created>1769782655541</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1769782655541</updated>
+    </task>
+    <task id="LOCAL-00013" summary="added a function to plot PR curves">
+      <option name="closed" value="true" />
+      <created>1770829980403</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1770829980403</updated>
+    </task>
+    <task id="LOCAL-00014" summary="added ROC AUC curve plot, F1 scores">
+      <option name="closed" value="true" />
+      <created>1771380980669</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1771380980669</updated>
+    </task>
+    <task id="LOCAL-00015" summary="Added  optimal values after the testings. and also added the confusion matrix">
+      <option name="closed" value="true" />
+      <created>1772038861523</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1772038861523</updated>
+    </task>
+    <task id="LOCAL-00016" summary="create course embeddings and save them for recommendation">
+      <option name="closed" value="true" />
+      <created>1772254755121</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1772254755121</updated>
+    </task>
+    <task id="LOCAL-00017" summary="add exception handling">
+      <option name="closed" value="true" />
+      <created>1772890128784</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1772890128784</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Import final dataset and preprocess for use sentence transformer" />
+    <MESSAGE value="import 4  versions of sentence transformer. created a function to convert text to numerical vectors(embedding)." />
+    <MESSAGE value="Update the code to automatically create sentence pairs. these pairs need to fine tune the model later." />
+    <MESSAGE value="add a function to evaluate 3 sentence transformer models. and compair their recall scores to find the best model." />
+    <MESSAGE value="fine-tuned all models and update the code for print before and after recall values." />
+    <MESSAGE value="optimize sentence-transformer training by limiting training pairs" />
+    <MESSAGE value="update code to fine-tune selected model after comparing recall scores from base models" />
+    <MESSAGE value="update code to save the fine_tuned model in local storage." />
+    <MESSAGE value="add function to create course embedding" />
+    <MESSAGE value="Added precision to evaluate models" />
+    <MESSAGE value="added a function to plot PR curves" />
+    <MESSAGE value="added ROC AUC curve plot, F1 scores" />
+    <MESSAGE value="Added  optimal values after the testings. and also added the confusion matrix" />
+    <MESSAGE value="create course embeddings and save them for recommendation" />
+    <MESSAGE value="add exception handling" />
+    <option name="LAST_COMMIT_MESSAGE" value="add exception handling" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/PythonProject$C4.coverage" NAME="C4 Coverage Results" MODIFIED="1773545153259" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/PythonProject$Component_4.coverage" NAME="Component_4 Coverage Results" MODIFIED="1765102801622" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/PythonProject$.coverage" NAME=" Coverage Results" MODIFIED="1773411667204" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  </component>
+</project>
