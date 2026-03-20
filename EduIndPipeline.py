@@ -72,124 +72,6 @@ def mock_market_demand():
     market_demand_skills = list(market_demand_skills_set)
     return market_demand_skills
 
-def sbert_model(df,market_df):
-    # ─────────────────────────────────────────────
-    # SETUP
-    # ─────────────────────────────────────────────
-    logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
-
-    # ─────────────────────────────────────────────
-    # PREPARE TRAINING CORPUS
-    # ─────────────────────────────────────────────
-    df = df.dropna(subset=['Skills'])
-    #market_df = market_df.dropna(subset=['Skills'])
-
-    all_sentences = df['Skills'].tolist()
-    print(f"[INFO] Total skill rows loaded: {len(all_sentences)}")
-
-    # ─────────────────────────────────────────────
-    # MILESTONE 2 — TRAIN / TEST SPLIT  (80 / 20)
-    # ─────────────────────────────────────────────
-    train_sentences, test_sentences = train_test_split(
-        all_sentences,
-        test_size=0.20,
-        random_state=42
-    )
-    print(f"[INFO] Train sentences : {len(train_sentences)}")
-    print(f"[INFO] Test  sentences : {len(test_sentences)}")
-
-    # ─────────────────────────────────────────────
-    # BUILD THE BASE MODEL
-    # ─────────────────────────────────────────────
-    model_name = 'bert-base-uncased'
-
-    word_embedding_model = models.Transformer(model_name)
-    pooling_model = models.Pooling(
-        word_embedding_model.get_word_embedding_dimension(),
-        pooling_mode='mean'  # Mean pooling is standard for TSDAE
-    )
-    model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
-
-    # ─────────────────────────────────────────────
-    # TRAINING DATA  (TSDAE — reconstruction task)
-    # ─────────────────────────────────────────────
-    train_dataset = DenoisingAutoEncoderDataset(train_sentences)
-    train_dataloader = DataLoader(train_dataset, batch_size=8, shuffle=True)
-    train_loss = losses.DenoisingAutoEncoderLoss(
-        model,
-        decoder_name_or_path=model_name,
-        tie_encoder_decoder=False  # Separate weights → better TSDAE quality
-    )
-
-    # ─────────────────────────────────────────────
-    # MILESTONE 1 — BUILT-IN EVALUATOR
-    #   Strategy: corrupt the held-out test sentences
-    #   exactly as TSDAE does (random token deletion),
-    #   then measure cosine-similarity between the
-    #   encoder's (noisy) and (clean) embeddings.
-    #   A well-trained model should produce similar
-    #   vectors for both, so the score rises with
-    #   training quality.  The best checkpoint is
-    #   saved automatically via save_best_model=True.
-    # ─────────────────────────────────────────────
-    def corrupt_sentences(sentences: list[str], del_ratio: float = 0.60) -> list[str]:
-        """
-        Mimic TSDAE's default corruption: randomly delete ~60 % of tokens.
-        Used to create (noisy, clean) evaluation pairs from the test split.
-        """
-        rng = np.random.default_rng(seed=42)
-        corrupted = []
-        for sent in sentences:
-            words = sent.split()
-            if len(words) <= 1:
-                corrupted.append(sent)
-                continue
-            kept = [w for w in words if rng.random() > del_ratio]
-            if not kept:  # Guarantee at least one token
-                kept = [words[rng.integers(len(words))]]
-            corrupted.append(' '.join(kept))
-        return corrupted
-
-    test_noisy = corrupt_sentences(test_sentences)
-    test_labels = [1.0] * len(test_sentences)  # Every pair should score ≈ 1.0
-
-    # EmbeddingSimilarityEvaluator computes Pearson / Spearman / cosine-similarity
-    # between sentence pairs and returns a scalar score after every evaluation step.
-    evaluator = evaluation.EmbeddingSimilarityEvaluator(
-        sentences1=test_noisy,
-        sentences2=test_sentences,
-        scores=test_labels,
-        name='tsdae-test-eval',
-        show_progress_bar=False
-    )
-
-    # ─────────────────────────────────────────────
-    # FINE-TUNING  — AUTO BEST-EPOCH SELECTION
-    #   • evaluation_steps = steps_per_epoch  → evaluator runs once per epoch
-    #   • save_best_model = True              → only the best-scoring checkpoint
-    #                                           is kept in output_path
-    #   Set MAX_EPOCHS to 5 (or higher on GPU);
-    #   the evaluator will crown the best epoch automatically.
-    # ─────────────────────────────────────────────
-    MAX_EPOCHS = 5
-    steps_per_epoch = len(train_dataloader)
-
-    print(f"\n[INFO] Starting TSDAE fine-tuning — up to {MAX_EPOCHS} epochs ...")
-    print(f"[INFO] Evaluator will run every {steps_per_epoch} steps (once per epoch).\n")
-
-    model.fit(
-        train_objectives=[(train_dataloader, train_loss)],
-        epochs=MAX_EPOCHS,
-        evaluator=evaluator,
-        evaluation_steps=steps_per_epoch,  # ← one eval per full epoch
-        save_best_model=True,  # ← only best epoch is persisted
-        show_progress_bar=True,
-        output_path='custom_it_curriculum_model'
-    )
-
-    print("\n[INFO] Fine-tuning complete.")
-    print("[INFO] Best epoch model saved to 'custom_it_curriculum_model'.")
-    print("[INFO] Check tsdae-test-eval_results.csv for per-epoch scores.")
 
 def test_Sbert(df):
     # ─────────────────────────────────────────────
@@ -410,6 +292,7 @@ def test_Sbert(df):
     plt.savefig('loss_curve.png', dpi=150, bbox_inches='tight')
     plt.show()
     print("[INFO] Loss curve saved to 'loss_curve.png'")
+    
 def Similarity_Measures(market_demand_skills):
     # Initialize Model
     model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -499,8 +382,6 @@ def main():
     #clean_data(df)
     #DataAnalysis(df)
     mock_data = mock_market_demand()
-
-    sbert_model(df,mock_data)
 
     #sbert_model(df,mock_data)
     test_Sbert(df)
