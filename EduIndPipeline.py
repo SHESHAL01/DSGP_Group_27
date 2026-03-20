@@ -7,6 +7,9 @@ from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader
 from sentence_transformers import SentenceTransformer, models, losses, evaluation, util
 from sentence_transformers.datasets import DenoisingAutoEncoderDataset
+import torch
+from tqdm import tqdm
+from torch.optim import AdamW
 
 def DataAnalysis(df):
     print("DATASET OVERVIEW")
@@ -188,7 +191,225 @@ def sbert_model(df,market_df):
     print("[INFO] Best epoch model saved to 'custom_it_curriculum_model'.")
     print("[INFO] Check tsdae-test-eval_results.csv for per-epoch scores.")
 
+def test_Sbert(df):
+    # ─────────────────────────────────────────────
+    # SETUP
+    # ─────────────────────────────────────────────
+    logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"[INFO] Using device: {device}")
 
+    # ─────────────────────────────────────────────
+    # PREPARE DATA  —  80 / 20 SPLIT
+    # ─────────────────────────────────────────────
+    df = df.dropna(subset=['Skills'])
+    #market_df = market_df.dropna(subset=['Skills'])
+
+    all_sentences = df['Skills'].tolist()
+
+    train_sentences, val_sentences = train_test_split(
+        all_sentences,
+        test_size=0.20,
+        random_state=42
+    )
+    print(f"[INFO] Train: {len(train_sentences)} | Validation: {len(val_sentences)}")
+
+    # ─────────────────────────────────────────────
+    # BUILD THE SENTENCE TRANSFORMER MODEL
+    # ─────────────────────────────────────────────
+    model_name = 'bert-base-uncased'
+
+    word_embedding_model = models.Transformer(model_name)
+    pooling_model = models.Pooling(
+        word_embedding_model.get_word_embedding_dimension(),
+        pooling_mode='mean'
+    )
+    model = SentenceTransformer(modules=[word_embedding_model, pooling_model])
+    model.to(device)
+
+    # ─────────────────────────────────────────────
+    # BUILD DATALOADERS
+    #   smart_batching_collate converts InputExample
+    #   objects into (features, labels) tensor tuples
+    #   that the loss function consumes directly.
+    # ─────────────────────────────────────────────
+    BATCH_SIZE = 8
+
+    train_dataloader = DataLoader(
+        DenoisingAutoEncoderDataset(train_sentences),
+        batch_size=BATCH_SIZE,
+        shuffle=True,
+        collate_fn=model.smart_batching_collate  # ← critical: formats batches correctly
+    )
+
+    val_dataloader = DataLoader(
+        DenoisingAutoEncoderDataset(val_sentences),
+        batch_size=BATCH_SIZE,
+        shuffle=False,
+        collate_fn=model.smart_batching_collate
+    )
+
+    # ─────────────────────────────────────────────
+    # BUILD THE TSDAE LOSS
+    #   The decoder lives inside the loss object, so
+    #   both model + loss_fn must be moved to device
+    #   and their parameters included in the optimizer.
+    # ─────────────────────────────────────────────
+    loss_fn = losses.DenoisingAutoEncoderLoss(
+        model,
+        decoder_name_or_path=model_name,
+        tie_encoder_decoder=False
+    )
+    loss_fn.to(device)
+
+    # ─────────────────────────────────────────────
+    # OPTIMIZER
+    #   Combine encoder (model) + decoder (loss_fn)
+    #   parameters so both are updated each step.
+    # ─────────────────────────────────────────────
+    optimizer = AdamW(
+        list(model.parameters()) + list(loss_fn.parameters()),
+        lr=3e-5,
+        weight_decay=0.01
+    )
+
+    # ─────────────────────────────────────────────
+    # CUSTOM TRAINING LOOP
+    #   Tracks Training Loss AND Validation Loss
+    #   after every epoch so you can spot:
+    #     • Underfitting  → both losses stay high
+    #     • Optimal       → both decrease and level together
+    #     • Overfitting   → train↓ but val turns back up
+    # ─────────────────────────────────────────────
+    MAX_EPOCHS = 5
+    train_losses = []
+    val_losses = []
+    best_val_loss = float('inf')
+    best_epoch = 0
+
+    print(f"\n{'=' * 60}")
+    print("       TSDAE TRAINING  —  LOSS TRACKING")
+    print(f"{'=' * 60}\n")
+
+    for epoch in range(1, MAX_EPOCHS + 1):
+
+        # ── TRAINING PHASE ──────────────────────────────────────────
+        model.train()
+        loss_fn.train()
+        epoch_train_loss = 0.0
+
+        train_bar = tqdm(
+            train_dataloader,
+            desc=f"Epoch {epoch}/{MAX_EPOCHS} [Train]",
+            leave=False
+        )
+        for features, labels in train_bar:
+            # Move each feature dict's tensors to device
+            features = [{k: v.to(device) for k, v in f.items()} for f in features]
+
+            optimizer.zero_grad()
+            loss = loss_fn(features, labels)  # TSDAE reconstruction loss
+            loss.backward()
+            optimizer.step()
+
+            epoch_train_loss += loss.item()
+            train_bar.set_postfix(loss=f"{loss.item():.4f}")
+
+        avg_train = epoch_train_loss / len(train_dataloader)
+        train_losses.append(avg_train)
+
+        # ── VALIDATION PHASE ─────────────────────────────────────────
+        #   model.eval() + torch.no_grad() → no gradients computed,
+        #   loss is purely a measurement of reconstruction quality.
+        model.eval()
+        loss_fn.eval()
+        epoch_val_loss = 0.0
+
+        val_bar = tqdm(
+            val_dataloader,
+            desc=f"Epoch {epoch}/{MAX_EPOCHS} [Val  ]",
+            leave=False
+        )
+        with torch.no_grad():
+            for features, labels in val_bar:
+                features = [{k: v.to(device) for k, v in f.items()} for f in features]
+                loss = loss_fn(features, labels)
+                epoch_val_loss += loss.item()
+                val_bar.set_postfix(loss=f"{loss.item():.4f}")
+
+        avg_val = epoch_val_loss / len(val_dataloader)
+        val_losses.append(avg_val)
+
+        # ── EPOCH SUMMARY ────────────────────────────────────────────
+        gap = avg_val - avg_train
+        if avg_train > 1.5 and avg_val > 1.5:
+            diagnosis = "⚠️  UNDERFITTING  — both losses high"
+        elif gap > 0.3:
+            diagnosis = "🔴  OVERFITTING   — val loss diverging from train"
+        elif gap > 0.1:
+            diagnosis = "🟡  WATCH         — small gap, monitor next epoch"
+        else:
+            diagnosis = "✅  OPTIMAL       — losses tracking together"
+
+        print(
+            f"Epoch {epoch:02d}/{MAX_EPOCHS}  |  "
+            f"Train Loss: {avg_train:.4f}  |  "
+            f"Val Loss: {avg_val:.4f}  |  "
+            f"Gap: {gap:+.4f}  |  {diagnosis}"
+        )
+
+        # Save best checkpoint (lowest validation loss)
+        if avg_val < best_val_loss:
+            best_val_loss = avg_val
+            best_epoch = epoch
+            model.save('custom_it_curriculum_model')
+            print(f"           └─ 💾 New best model saved (val loss: {best_val_loss:.4f})")
+
+    # ─────────────────────────────────────────────
+    # FINAL SUMMARY
+    # ─────────────────────────────────────────────
+    print(f"\n{'=' * 60}")
+    print(f"  Training complete.  Best epoch: {best_epoch}  |  Best val loss: {best_val_loss:.4f}")
+    print(f"  Model saved to: custom_it_curriculum_model/")
+    print(f"{'=' * 60}")
+
+    # ─────────────────────────────────────────────
+    # PLOT  —  Training Loss vs Validation Loss
+    #   Visual diagnosis of fit condition
+    # ─────────────────────────────────────────────
+    epochs_range = range(1, MAX_EPOCHS + 1)
+
+    plt.figure(figsize=(9, 5))
+    plt.plot(epochs_range, train_losses, marker='o', linewidth=2,
+             color='steelblue', label='Training Loss')
+    plt.plot(epochs_range, val_losses, marker='s', linewidth=2,
+             color='tomato', label='Validation Loss', linestyle='--')
+
+    # Mark the best epoch
+    plt.axvline(x=best_epoch, color='green', linestyle=':', linewidth=1.5,
+                label=f'Best Epoch ({best_epoch})')
+
+    plt.title('TSDAE Training vs Validation Loss\n(Underfitting / Optimal / Overfitting Diagnosis)',
+              fontsize=13, fontweight='bold')
+    plt.xlabel('Epoch', fontsize=11)
+    plt.ylabel('Reconstruction Loss', fontsize=11)
+    plt.xticks(epochs_range)
+    plt.legend(fontsize=10)
+    plt.grid(True, alpha=0.35)
+
+    # Annotation guide
+    plt.figtext(
+        0.13, 0.01,
+        "Both high → Underfit  |  "
+        "Both decrease together → Optimal  |  "
+        "Val rises while Train drops → Overfit",
+        fontsize=8, color='dimgray'
+    )
+
+    plt.tight_layout(rect=[0, 0.04, 1, 1])
+    plt.savefig('loss_curve.png', dpi=150, bbox_inches='tight')
+    plt.show()
+    print("[INFO] Loss curve saved to 'loss_curve.png'")
 def Similarity_Measures(market_demand_skills):
     # Initialize Model
     model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -281,9 +502,10 @@ def main():
 
     sbert_model(df,mock_data)
 
+    #sbert_model(df,mock_data)
+    test_Sbert(df)
     #uni_score = Similarity_Measures(mock_data)
     #plot_charts(uni_score, df, mock_data)
-
 
 if __name__ == '__main__':
     main()
