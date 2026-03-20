@@ -16,7 +16,8 @@ from sklearn.metrics import (
     precision_score,
     recall_score,
     confusion_matrix,
-    ConfusionMatrixDisplay
+    ConfusionMatrixDisplay,
+    classification_report
 )
 
 # ------------------- CONFIG -------------------
@@ -179,8 +180,11 @@ def evaluate_model_with_metrics(model, test_df, sample_size=20000):
         print(f"Recall: {recall:.4f}")
         print(f"Best Threshold: {best_threshold:.4f}")
 
+        print("\nClassification Report:")
+        print(classification_report(y_true, final_preds))
+
         disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-        disp.plot()
+        disp.plot(cmap="Blues")
         plt.title("Confusion Matrix")
         plt.show()
 
