@@ -277,8 +277,6 @@ def main():
     #DataAnalysis(df)
     #clean_data(df)
     #DataAnalysis(df)
-    #word_count_analysis(df)
-    #df = feature_extraction(df)
     mock_data = mock_market_demand()
 
     sbert_model(df,mock_data)
