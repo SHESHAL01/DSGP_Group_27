@@ -62,7 +62,6 @@
             Select a role to view the most in-demand skills in the current job market.
         </p>
     </section>
-
 </main>
 
 <footer class="footer">
@@ -70,56 +69,39 @@
 </footer>
 
 <script>
-async function getSkills() {
-    // Fixed: Changed from "roleInput" to "roleSelect" to match the select element ID
-    const roleSelect = document.getElementById("roleSelect");
-    const role = roleSelect.value;
+function getSkills() {
+    const role = document.getElementById("roleSelect").value;
 
-    // Show loading state
-    const resultsSection = document.getElementById("results");
-    resultsSection.innerHTML = '<p class="placeholder-text">Loading market data...</p>';
-    resultsSection.classList.remove('placeholder');
+    fetch("/market_demand", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ role: role })
+    })
+    .then(response => response.json())
+    .then(data => {
+        const resultsSection = document.getElementById("results");
 
-    try {
-        const response = await fetch("/market_demand", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({role: role})
+        if (data.skills.length === 0) {
+            resultsSection.innerHTML = "<p>No data available for this role.</p>";
+            return;
+        }
+
+        let html = "<h3>Top 10 In-Demand Skills</h3><ul>";
+
+        data.skills.forEach(skill => {
+            html += `<li>${skill}</li>`;
         });
 
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
+        html += "</ul>";
 
-        const data = await response.json();
-        
-        // Display the skills in a nice format
-        if (data.skills && data.skills.length > 0) {
-            let skillsHtml = '<h2>Top In-Demand Skills</h2><div class="skills-cards">';
-            
-            data.skills.forEach(skill => {
-                skillsHtml += `
-                    <div class="skill-card">
-                        ${skill.name}
-                        <small style="display: block; color: var(--accent-color); margin-top: 8px;">${skill.demand}% demand</small>
-                    </div>
-                `;
-            });
-            
-            skillsHtml += '</div>';
-            resultsSection.innerHTML = skillsHtml;
-        } else {
-            resultsSection.innerHTML = '<p class="placeholder-text">No market data available for this role.</p>';
-        }
-        
-    } catch (error) {
-        console.error('Error:', error);
-        resultsSection.innerHTML = '<p class="placeholder-text">Error loading market data. Please try again.</p>';
-    }
+        resultsSection.innerHTML = html;
+    })
+    .catch(error => {
+        console.error("Error:", error);
+    });
 }
 </script>
-
 </body>
 </html>

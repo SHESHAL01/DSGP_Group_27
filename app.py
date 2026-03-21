@@ -5,7 +5,8 @@ import joblib
 import sqlite3
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
-
+import ast
+from collections import Counter
 from utils import build_user_vector
 from employability import predict_employability
 from skill_gap import compute_role_skill_vectors, skill_gap_analysis
@@ -13,6 +14,154 @@ from career_growth import simulate_career_growth
 from explainability import explain_prediction
 from recommend_courses import get_course_recommendations
 
+# ======================================
+# Load Skills From CSV For Market Demand
+# ======================================
+skills_df = pd.read_csv("extracted_skills.csv")
+SKILL_DICTIONARY = [
+    # Programming Languages
+    "python", "java", "c", "c++", "c#", "javascript", "typescript", "go", "rust",
+    "php", "ruby", "swift", "kotlin", "r", "matlab", "scala", "perl", "bash",
+    "powershell", "objective-c", "groovy", "dart", "lua", "haskell",
+
+    # Web Development
+    "html", "css", "sass", "less", "bootstrap", "tailwind css",
+    "react", "angular", "vue", "next.js", "nuxt.js", "svelte",
+    "node.js", "express.js", "nestjs",
+    "django", "flask", "fastapi",
+    "spring", "spring boot",
+    "laravel", "codeigniter",
+    "asp.net", "asp.net core",
+    "graphql", "rest api", "soap",
+
+    # Databases
+    "mysql", "postgresql", "oracle", "sql server", "sqlite",
+    "mongodb", "cassandra", "couchdb", "redis", "dynamodb",
+    "firebase", "neo4j", "elasticsearch",
+    "nosql", "sql", "pl/sql",
+
+    # Cloud & DevOps
+    "aws", "azure", "google cloud", "gcp",
+    "ec2", "s3", "lambda", "cloudformation",
+    "docker", "kubernetes", "helm",
+    "terraform", "ansible", "chef", "puppet",
+    "jenkins", "gitlab ci", "github actions", "circleci",
+    "linux", "unix",
+    "nginx", "apache",
+    "devops", "site reliability engineering", "sre",
+
+    # Data Science & Machine Learning
+    "machine learning", "deep learning", "artificial intelligence",
+    "natural language processing", "nlp", "computer vision",
+    "data science", "data analysis", "data engineering",
+    "pandas", "numpy", "scipy", "scikit-learn",
+    "tensorflow", "keras", "pytorch",
+    "xgboost", "lightgbm",
+    "opencv",
+    "statistics", "linear regression", "logistic regression",
+    "clustering", "classification", "time series",
+
+    # Big Data
+    "hadoop", "spark", "pyspark", "kafka", "flink",
+    "hive", "pig", "hbase", "airflow",
+    "data warehousing", "etl",
+
+    # Mobile Development
+    "android", "ios",
+    "react native", "flutter", "xamarin",
+    "android studio", "xcode",
+
+    # Cybersecurity
+    "cybersecurity", "information security",
+    "penetration testing", "ethical hacking",
+    "network security", "application security",
+    "cryptography", "siem", "soc",
+    "firewalls", "ids", "ips",
+    "owasp", "iam",
+
+    # Networking
+    "tcp/ip", "udp", "dns", "dhcp",
+    "http", "https",
+    "routing", "switching",
+    "vpn", "lan", "wan",
+    "ccna", "ccnp",
+
+    # Operating Systems
+    "windows", "linux", "macos",
+    "red hat", "ubuntu", "debian", "centos",
+
+    # Software Engineering
+    "object oriented programming", "oop",
+    "design patterns",
+    "clean code", "solid principles",
+    "data structures", "algorithms",
+    "microservices", "monolithic architecture",
+    "event driven architecture",
+
+    # Testing & QA
+    "unit testing", "integration testing", "system testing",
+    "selenium", "cypress", "playwright",
+    "junit", "pytest", "testng",
+    "automation testing", "manual testing",
+
+    # Version Control & Tools
+    "git", "github", "gitlab", "bitbucket",
+    "jira", "confluence",
+    "postman", "swagger",
+
+    # UI / UX
+    "figma", "adobe xd", "sketch",
+    "ui design", "ux design",
+    "wireframing", "prototyping",
+
+    # ERP / CRM / Enterprise
+    "sap", "oracle erp", "salesforce",
+    "workday", "servicenow",
+
+    # Methodologies
+    "agile", "scrum", "kanban",
+    "waterfall", "devsecops",
+
+    # Misc / Emerging
+    "blockchain", "web3", "smart contracts",
+    "solidity",
+    "internet of things", "iot",
+    "robotic process automation", "rpa",
+    "computer graphics", "game development",
+    "unity", "unreal engine"
+]
+SKILL_SET = set([s.lower() for s in SKILL_DICTIONARY])
+def process_skills():
+    role_skills = {}
+
+    for _, row in skills_df.iterrows():
+        role = str(row["role"]).strip().lower()
+
+        try:
+            skills_list = ast.literal_eval(row["extracted_skills"])
+        except:
+            continue  # skip bad rows
+
+        # normalize + filter
+        cleaned_skills = [
+            s.strip().lower()
+            for s in skills_list
+            if isinstance(s, str) and s.strip().lower() in SKILL_SET
+        ]
+
+        if role not in role_skills:
+            role_skills[role] = []
+
+        role_skills[role].extend(cleaned_skills)
+
+    # get top 10
+    top_skills = {}
+    for role, skills in role_skills.items():
+        counter = Counter(skills)
+        top_skills[role] = [skill for skill, _ in counter.most_common(10)]
+
+    return top_skills
+TOP_SKILLS = process_skills()
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here-change-this-in-production'
@@ -73,10 +222,10 @@ role_vectors = compute_role_skill_vectors(
 def init_db():
     conn = sqlite3.connect('users.db')
     c = conn.cursor()
-    
+
     # Enable foreign keys
     c.execute('PRAGMA foreign_keys = ON')
-    
+
     c.execute('''CREATE TABLE IF NOT EXISTS users
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   name TEXT NOT NULL,
@@ -84,7 +233,7 @@ def init_db():
                   password TEXT NOT NULL,
                   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                   last_login TIMESTAMP)''')
-    
+
     c.execute('''CREATE TABLE IF NOT EXISTS user_activities
                  (id INTEGER PRIMARY KEY AUTOINCREMENT,
                   user_id INTEGER,
@@ -94,7 +243,7 @@ def init_db():
                   score FLOAT,
                   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                   FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE)''')
-    
+
     conn.commit()
     conn.close()
 
@@ -116,10 +265,10 @@ def get_user_activities(user_id, limit=50):
     try:
         conn = sqlite3.connect('users.db')
         c = conn.cursor()
-        c.execute('''SELECT activity_type, job_role, skills, score, created_at 
-                     FROM user_activities 
-                     WHERE user_id = ? 
-                     ORDER BY created_at DESC 
+        c.execute('''SELECT activity_type, job_role, skills, score, created_at
+                     FROM user_activities
+                     WHERE user_id = ?
+                     ORDER BY created_at DESC
                      LIMIT ?''', (user_id, limit))
         activities = c.fetchall()
         conn.close()
@@ -163,31 +312,31 @@ def login():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
-        
+
         conn = sqlite3.connect('users.db')
         c = conn.cursor()
         c.execute('SELECT id, name, email, password FROM users WHERE email = ?', (email,))
         user = c.fetchone()
-        
+
         if user and check_password_hash(user[3], password):
             session['user_id'] = user[0]
             session['user_name'] = user[1]
             session['user_email'] = user[2]
-            
-            c.execute('UPDATE users SET last_login = ? WHERE id = ?', 
+
+            c.execute('UPDATE users SET last_login = ? WHERE id = ?',
                      (datetime.now(), user[0]))
             c.execute('''INSERT INTO user_activities (user_id, activity_type, created_at)
                          VALUES (?, ?, ?)''', (user[0], 'login', datetime.now()))
-            
+
             conn.commit()
             conn.close()
-            
+
             flash('Logged in successfully!', 'success')
             return redirect(url_for('skillsync_home'))
         else:
             conn.close()
             flash('Invalid email or password', 'error')
-    
+
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -196,38 +345,38 @@ def register():
         name = request.form['name']
         email = request.form['email']
         password = request.form['password']
-        
+
         hashed_password = generate_password_hash(password)
-        
+
         conn = sqlite3.connect('users.db')
         c = conn.cursor()
-        
+
         try:
             c.execute('''INSERT INTO users (name, email, password, created_at)
                          VALUES (?, ?, ?, ?)''',
                      (name, email, hashed_password, datetime.now()))
             user_id = c.lastrowid
-            
+
             c.execute('''INSERT INTO user_activities (user_id, activity_type, created_at)
                          VALUES (?, ?, ?)''', (user_id, 'register', datetime.now()))
-            
+
             conn.commit()
             conn.close()
-            
+
             flash('Registration successful! Please log in.', 'success')
             return redirect(url_for('login'))
-            
+
         except sqlite3.IntegrityError:
             conn.close()
             flash('Email already exists. Please use a different email.', 'error')
-    
+
     return render_template('register.html')
 
 @app.route('/logout')
 def logout():
     if 'user_id' in session:
         log_activity(session['user_id'], 'logout')
-    
+
     session.clear()
     flash('You have been logged out.', 'success')
     return redirect(url_for('login'))
@@ -237,24 +386,24 @@ def profile():
     if 'user_id' not in session:
         flash('Please log in to view your profile', 'error')
         return redirect(url_for('login'))
-    
+
     try:
         conn = sqlite3.connect('users.db')
         c = conn.cursor()
-        
+
         # Get user info
-        c.execute('SELECT name, email, created_at, last_login FROM users WHERE id = ?', 
+        c.execute('SELECT name, email, created_at, last_login FROM users WHERE id = ?',
                  (session['user_id'],))
         user = c.fetchone()
-        
+
         if not user:
             conn.close()
             flash('User not found', 'error')
             return redirect(url_for('logout'))
-        
+
         # Get activities
         activities_raw = get_user_activities(session['user_id'])
-        
+
         activities = []
         for act in activities_raw:
             activity = {
@@ -265,9 +414,9 @@ def profile():
                 'created_at': parse_datetime_safe(act[4])
             }
             activities.append(activity)
-        
+
         conn.close()
-        
+
         # Parse user datetimes
         user_dict = {
             'name': user[0],
@@ -275,9 +424,9 @@ def profile():
             'created_at': parse_datetime_safe(user[2]),
             'last_login': parse_datetime_safe(user[3])
         }
-        
+
         return render_template('profile.html', user=user_dict, activities=activities)
-        
+
     except Exception as e:
         print(f"Error in profile route: {e}")
         flash('An error occurred while loading your profile', 'error')
@@ -291,7 +440,7 @@ def profile():
 def skillsync_home():
     if 'user_id' not in session:
         return redirect(url_for('login'))
-    
+
     return render_template(
         "skillsync.html",
         user={'name': session['user_name']}
@@ -303,7 +452,7 @@ def employability_page():
         flash('Please log in to access the employability predictor', 'error')
         return redirect(url_for('login'))
 
-    default_important_skills = []    
+    default_important_skills = []
     return render_template(
         "employability.html",
         score=0,
@@ -326,7 +475,7 @@ def employability_page():
 def predict():
     if 'user_id' not in session:
         return {'error': 'Please log in'}, 401
-    
+
     preferred_role = request.form["preferred_role"]
     skills_text = request.form["skills"]
     user_skills = [s.strip() for s in skills_text.split(",")]
@@ -371,29 +520,29 @@ def predict():
         role_vector,
         feature_names
     )
-    
+
     missing_skills = missing_skills_full[:6]
     missing_skills_display = [skill.replace("_", " ").title() for skill, _ in missing_skills]
-    
+
     # ===============================
     # Calculate Important Skills (Skill Importance)
     # ===============================
-    
+
     # Get the top important skills for the preferred role
     # This identifies which skills are most critical for this role
     important_skills_data = []
-    
+
     # Get the role vector and sort by importance (highest values first)
     role_vector_with_names = [(feature_names[i], role_vector[i]) for i in range(len(feature_names))]
     # Filter out skills with zero importance and sort by importance
     important_skills_sorted = sorted(
         [(skill, round(importance * 100, 1)) for skill, importance in role_vector_with_names if importance > 0.3],
-        key=lambda x: x[1], 
+        key=lambda x: x[1],
         reverse=True
     )[:8]  # Get top 8 important skills
-    
+
     important_skills_data = important_skills_sorted
-    
+
     # Store in session
     session['last_missing_skills'] = [skill for skill, _ in missing_skills_full[:10]]
     session['last_job_role'] = preferred_role
@@ -429,16 +578,16 @@ def recommendation_page():
     if 'user_id' not in session:
         flash('Please log in to access recommendations', 'error')
         return redirect(url_for('login'))
-    
+
     # Get parameters from URL
     preferred_job = request.args.get("job_role")
     user_skills_input = request.args.get("skills", "")
-    
+
     # If no URL parameters, try to use session data
     if not preferred_job or not user_skills_input:
         preferred_job = session.get('last_job_role', '')
         user_skills_input = session.get('last_user_skills', '')
-    
+
     if not preferred_job or not user_skills_input:
         return render_template(
             "recommendation.html",
@@ -450,36 +599,36 @@ def recommendation_page():
             metrics={"Precision": rf_precision, "Recall": rf_recall, "F1": rf_f1},
             user={'name': session['user_name']}
         )
-    
+
     # Get missing skills from session
     missing_skills = session.get('last_missing_skills', [])
-    
+
     if not missing_skills:
         # Recalculate if needed
         user_skills = [s.strip().lower() for s in user_skills_input.split(",")]
         user_vector = build_user_vector(user_skills, feature_names)
         role_vector = role_vectors[preferred_job]
-        
+
         missing_skills_full = skill_gap_analysis(
             user_vector,
             role_vector,
             feature_names
         )
         missing_skills = [skill for skill, _ in missing_skills_full[:10]]
-    
+
     # Calculate match percentage
     match_percent = 0
     if missing_skills:
         role_vector = role_vectors[preferred_job]
         total_relevant = sum(1 for v in role_vector if v > 0.3)
         match_percent = int((total_relevant - len(missing_skills)) / total_relevant * 100) if total_relevant > 0 else 0
-    
+
     # Get course recommendations
     recommendations = get_course_recommendations(missing_skills, preferred_job)
-    
+
     # Clean skill names for display
     mismatches_display = [skill.replace('_', ' ').title() for skill in missing_skills]
-    
+
     # Log recommendation activity
     log_activity(
         session['user_id'],
@@ -487,7 +636,7 @@ def recommendation_page():
         preferred_job,
         user_skills_input
     )
-    
+
     return render_template(
         "recommendation.html",
         job=preferred_job,
@@ -503,33 +652,33 @@ def recommendation_page():
 def predict_skills():
     if 'user_id' not in session:
         return jsonify({"error": "Please log in"}), 401
-    
+
     data = request.get_json()
     preferred_job = data.get("job_role")
     user_skills_input = data.get("skills", "")
     user_skills = [s.strip().lower() for s in user_skills_input.split(",")]
-    
+
     # Use actual model to get skill gaps
     user_vector = build_user_vector(user_skills, feature_names)
     role_vector = role_vectors[preferred_job]
-    
+
     missing_skills_full = skill_gap_analysis(
         user_vector,
         role_vector,
         feature_names
     )
-    
+
     missing_skills_display = [skill.replace('_', ' ').title() for skill, _ in missing_skills_full[:6]]
-    
+
     # Store in session
     session['last_missing_skills'] = [skill for skill, _ in missing_skills_full[:10]]
     session['last_job_role'] = preferred_job
     session['last_user_skills'] = user_skills_input
-    
+
     # Calculate match percentage
     total_relevant = sum(1 for v in role_vector if v > 0.3)
     match_percent = int((total_relevant - len(missing_skills_full)) / total_relevant * 100) if total_relevant > 0 else 0
-    
+
     return jsonify({
         "mismatches": missing_skills_display,
         "match_percent": match_percent
@@ -539,94 +688,21 @@ def predict_skills():
 def market_demand():
     if 'user_id' not in session:
         return jsonify({"error": "Please log in"}), 401
-    
+
     data = request.get_json()
-    role = data.get("role", "").lower()
-    
-    # This is sample data - you should replace this with actual data from your database or API
-    # You can fetch this data from a database, CSV file, or external API
-    
-    # Sample market demand data for different roles
-    market_data = {
-        "software engineer": [
-            {"name": "Python", "demand": 85},
-            {"name": "JavaScript", "demand": 82},
-            {"name": "React", "demand": 78},
-            {"name": "Java", "demand": 75},
-            {"name": "SQL", "demand": 70},
-            {"name": "AWS", "demand": 65},
-            {"name": "Docker", "demand": 60},
-            {"name": "Git", "demand": 55}
-        ],
-        "data scientist": [
-            {"name": "Python", "demand": 90},
-            {"name": "Machine Learning", "demand": 85},
-            {"name": "SQL", "demand": 75},
-            {"name": "Statistics", "demand": 70},
-            {"name": "TensorFlow", "demand": 65},
-            {"name": "R", "demand": 60},
-            {"name": "Data Visualization", "demand": 55},
-            {"name": "Deep Learning", "demand": 50}
-        ],
-        "data analyst": [
-            {"name": "SQL", "demand": 88},
-            {"name": "Excel", "demand": 85},
-            {"name": "Python", "demand": 75},
-            {"name": "Tableau", "demand": 70},
-            {"name": "Power BI", "demand": 68},
-            {"name": "Statistics", "demand": 65},
-            {"name": "Data Visualization", "demand": 60},
-            {"name": "R", "demand": 55}
-        ],
-        "devops engineer": [
-            {"name": "Docker", "demand": 85},
-            {"name": "Kubernetes", "demand": 82},
-            {"name": "AWS", "demand": 80},
-            {"name": "CI/CD", "demand": 78},
-            {"name": "Jenkins", "demand": 75},
-            {"name": "Linux", "demand": 70},
-            {"name": "Terraform", "demand": 65},
-            {"name": "Ansible", "demand": 60}
-        ],
-        "qa engineer": [
-            {"name": "Selenium", "demand": 80},
-            {"name": "Test Automation", "demand": 78},
-            {"name": "JUnit", "demand": 70},
-            {"name": "Python", "demand": 65},
-            {"name": "Java", "demand": 60},
-            {"name": "JMeter", "demand": 55},
-            {"name": "Cucumber", "demand": 50},
-            {"name": "TestNG", "demand": 45}
-        ]
-    }
-    
-    # Get data for the requested role, or provide default data
-    skills = market_data.get(role, [
-        {"name": "Python", "demand": 80},
-        {"name": "SQL", "demand": 75},
-        {"name": "JavaScript", "demand": 70},
-        {"name": "Communication", "demand": 65},
-        {"name": "Problem Solving", "demand": 60},
-        {"name": "Teamwork", "demand": 55}
-    ])
-    
-    # Log the activity
-    log_activity(
-        session['user_id'],
-        'market_analysis',
-        role,
-        None,
-        None
-    )
-    
+    role = str(data.get("role", "")).strip().lower()
+
+    skills = TOP_SKILLS.get(role, [])
+
     return jsonify({"skills": skills})
+
 
 @app.route("/market-demand")
 def market_demand_page():
     if 'user_id' not in session:
         flash('Please log in to access market demand analysis', 'error')
         return redirect(url_for('login'))
-    
+
     return render_template("marketdemand.html", user={'name': session['user_name']})
 
 @app.route("/education_alignment")
@@ -634,7 +710,7 @@ def education_alignment():
     if 'user_id' not in session:
         flash('Please log in to view education alignment', 'error')
         return redirect(url_for('login'))
-    
+
     return render_template("index.html", user={'name': session['user_name']})
 
 @app.errorhandler(404)
