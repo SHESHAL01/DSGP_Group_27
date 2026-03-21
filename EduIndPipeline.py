@@ -49,6 +49,179 @@ def DataAnalysis(df):
     print(df['Year'].value_counts().sort_index())
 
 
+# STOPWORDS
+STOPWORDS = {
+    # Domain-specific filler (course catalog language)
+    "introduction", "intro", "fundamentals", "fundamental",
+    "overview", "basics", "basic", "advanced",
+    # Common English stopwords
+    "a", "an", "the", "and", "but", "or", "nor", "if",
+    "to", "of", "in", "for", "on", "at", "by", "from",
+    "with", "into", "through", "via", "using", "about", "as",
+    "until", "while", "during", "before", "after", "above",
+    "below", "up", "down", "out", "over", "under", "again",
+    "its", "their", "our", "your", "my",
+    "is", "are", "was", "were", "be", "been", "being",
+    "have", "has", "had", "do", "does", "did",
+    "it", "this", "that", "these", "those",
+    "i", "we", "you", "he", "she", "they", "them",
+    "so", "than", "too", "very", "just", "only", "same",
+    "each", "more", "most", "other", "some", "such", "no",
+    "not", "both", "own", "between", "here", "there",
+    "when", "where", "how", "all", "few", "then", "once",
+}
+
+# HELPER: Is a slash-token a protected compound abbreviation
+def is_compound_abbreviation(token: str) -> bool:
+    """Return True if all slash-parts are uppercase-only abbreviations."""
+    parts = token.split("/")
+    pattern = re.compile(r"^[A-Z][A-Z0-9]*(-[A-Z0-9]+)*$")
+    return all(pattern.match(p) for p in parts)
+
+# HELPER: Split by comma
+def split_comma_outside_parens(text: str) -> list:
+    """Split text on commas that sit outside of any parentheses."""
+    parts, current, depth = [], [], 0
+    for ch in text:
+        if ch == "(":
+            depth += 1
+            current.append(ch)
+        elif ch == ")":
+            depth -= 1
+            current.append(ch)
+        elif ch == "," and depth == 0:
+            parts.append("".join(current).strip())
+            current = []
+        else:
+            current.append(ch)
+    if current:
+        parts.append("".join(current).strip())
+    return [p for p in parts if p]
+
+
+# Expand parentheses
+def expand_parentheses(text: str) -> list:
+    """
+    Remove parentheses and extract their content.
+
+    Examples
+    --------
+    'Version control (Git)'
+        → ['Version control', 'Git']
+    'OOP principles (encapsulation, inheritance, polymorphism, abstraction)'
+        → ['OOP principles', 'encapsulation', 'inheritance', 'polymorphism', 'abstraction']
+    'Data structures (lists/dicts/tuples)'
+        → ['Data structures', 'lists', 'dicts', 'tuples']
+    'SQL (DDL/DML/DCL)'
+        → ['SQL', 'DDL', 'DML', 'DCL']
+    'Software testing (unit, integration, system)'
+        → ['Software testing', 'unit', 'integration', 'system']
+    """
+    results = []
+    remaining = text
+
+    while "(" in remaining and ")" in remaining:
+        open_i  = remaining.index("(")
+        close_i = remaining.index(")")
+
+        before = remaining[:open_i].strip().rstrip(",").strip()
+        inside = remaining[open_i + 1 : close_i].strip()
+        after  = remaining[close_i + 1 :].strip().lstrip(",").strip()
+
+        if before:
+            results.append(before)
+
+        # Inside: split by comma first, then by slash (always — they are alternatives)
+        for chunk in re.split(r",", inside):
+            chunk = chunk.strip()
+            if not chunk:
+                continue
+            for part in chunk.split("/"):
+                part = part.strip()
+                if part:
+                    results.append(part)
+
+        remaining = after
+
+    if remaining.strip():
+        results.append(remaining.strip())
+
+    return [r for r in results if r]
+
+
+# Handle slashes OUTSIDE parentheses
+def split_slash(skill: str) -> list:
+    """
+    Split a skill on non-compound slashes.
+
+    Examples
+    --------
+    'Agile/Scrum'              → ['Agile', 'Scrum']
+    'File I/O'                 → ['File I/O']            (I/O is compound)
+    'CI/CD Pipeline'           → ['CI/CD Pipeline']      (CI/CD is compound)
+    'OSI/TCP-IP model'         → ['OSI/TCP-IP model']    (both uppercase)
+    'AWS/Azure/GCP'            → ['AWS', 'Azure', 'GCP'] (Azure has lowercase)
+    'Sorting/searching algos'  → ['Sorting', 'searching algos']
+    """
+    if "/" not in skill:
+        return [skill]
+
+    def replace_slash_token(match):
+        token = match.group(0)
+        if is_compound_abbreviation(token):
+            return token                # keep intact
+        return token.replace("/", "§")  # mark for splitting
+
+    processed = re.sub(r"\S+/\S*", replace_slash_token, skill)
+
+    if "§" not in processed:
+        return [skill]
+
+    return [p.strip() for p in processed.split("§") if p.strip()]
+
+
+# Remove stopwords from a single skill phrase
+def remove_stopwords(skill: str) -> str:
+    words = skill.split()
+    cleaned = [w for w in words if w.lower() not in STOPWORDS]
+    return " ".join(cleaned)
+
+
+# MAIN CLEANING FUNCTION
+def clean_skills_cell(cell) -> str:
+    """Full cleaning pipeline for one cell in the Skills column."""
+    if pd.isna(cell):
+        return cell
+
+    # Split on commas that are OUTSIDE parentheses (fixes comma-inside-parens bug)
+    raw_skills = split_comma_outside_parens(cell)
+
+    final_skills = []
+    for skill in raw_skills:
+        skill = skill.strip()
+        if not skill:
+            continue
+
+        # 1. Expand parentheses → list of sub-skills
+        expanded = expand_parentheses(skill)
+
+        for part in expanded:
+
+            # 2. Split on non-compound slashes → possibly multiple sub-skills
+            split_parts = split_slash(part)
+
+            for sp in split_parts:
+
+                # 3. Remove stopwords
+                sp = remove_stopwords(sp)
+
+                # 4. Lowercase + collapse extra whitespace
+                sp = re.sub(r"\s+", " ", sp).strip().lower()
+
+                if sp:
+                    final_skills.append(sp)
+
+    return ", ".join(final_skills)
 
 
 def mock_market_demand():
@@ -367,9 +540,10 @@ def plot_charts(df_uni_score, df_features, market_demand_skills):
         print(f"Recommendation: Consider adding modules for {', '.join(list(skill_gap)[:3])} to improve alignment")
 
 def main():
-    data = pd.read_csv('Data.csv')
+    df = pd.read_csv("Data.csv")
 
-    df = pd.DataFrame(data)
+    df["Skills"] = df["Skills"].apply(clean_skills_cell)
+    print(df.head())
     #DataAnalysis(df)
     #mock_data = mock_market_demand()
 
