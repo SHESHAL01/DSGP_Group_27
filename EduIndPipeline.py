@@ -11,6 +11,7 @@ import torch
 from tqdm import tqdm
 from torch.optim import AdamW
 import re
+import ast
 
 def DataAnalysis(df):
     print("DATASET OVERVIEW")
@@ -223,8 +224,18 @@ def clean_skills_cell(cell) -> str:
 
     return ", ".join(final_skills)
 
+def parse_market_skills(raw: str) -> set:
+    """
+    Parse the string-encoded list
+    """
+    try:
+        items = ast.literal_eval(raw)
+        return {str(t).strip().lower() for t in items if str(t).strip()}
+    except (ValueError, SyntaxError):
+        raw = raw.strip("[]").replace("'", "").replace('"', "")
+        return {t.strip().lower() for t in raw.split(",") if t.strip()}
 
-def mock_market_demand():
+def market_demand_skills():
     # Test "Market Demand Analyzer" output
     skill_df = pd.read_csv('skill_Data.csv')
     market_demand_skills_set = set()
@@ -329,7 +340,7 @@ def test_Sbert(df):
     #     • Optimal       → both decrease and level together
     #     • Overfitting   → train↓ but val turns back up
     # ─────────────────────────────────────────────
-    MAX_EPOCHS = 5
+    MAX_EPOCHS = 10
     train_losses = []
     val_losses = []
     best_val_loss = float('inf')
@@ -459,6 +470,72 @@ def test_Sbert(df):
     plt.show()
     print("[INFO] Loss curve saved to 'loss_curve.png'")
 
+def phrase_to_tokens(phrase: str) -> set:
+    """
+    Split a skill phrase into individual word tokens.
+    """
+    phrase = phrase.lower()
+    return {word for word in re.findall(r"[a-z]+", phrase)}
+
+def jaccard_similarity(set_a: set, set_b: set) -> float:
+    """Jaccard = |A ∩ B| / |A ∪ B|"""
+    if not set_a or not set_b:
+        return 0.0
+    return round(len(set_a & set_b) / len(set_a | set_b), 4)
+
+def jaccard_relavance(df, market_skills):
+
+    # ── Aggregate per-university skill tokens
+    university_skills = {}
+
+    for _, row in df.iterrows():
+        uni = str(row["University"]).strip()
+        raw = str(row["Skills"])
+
+        # Split each comma-separated phrase into individual word tokens
+        tokens = set()
+        for phrase in raw.split(","):
+            tokens |= phrase_to_tokens(phrase.strip())
+
+        university_skills.setdefault(uni, set())
+        university_skills[uni] |= tokens  # set union → no duplicates
+
+    print(f"Universities found: {list(university_skills.keys())}\n")
+
+    # ── Jaccard similarity per university
+
+    results = []
+    for uni, uni_tokens in university_skills.items():
+        score = jaccard_similarity(uni_tokens, market_skills)
+        common = uni_tokens & market_skills
+        results.append({
+            "University": uni,
+            "Curriculum_Tokens": len(uni_tokens),
+            "Market_Tokens": len(market_skills),
+            "Common_Tokens": len(common),
+            "Jaccard_Score": score,
+            "Relevance_%": f"{score * 100:.2f}%",
+            "Matched_Skills": ", ".join(sorted(common))
+        })
+
+    results_df = (pd.DataFrame(results)
+                  .sort_values("Jaccard_Score", ascending=False)
+                  .reset_index(drop=True))
+
+    # Print results
+
+    print("=" * 60)
+    print("  UNIVERSITY CURRICULUM RELEVANCE  (Jaccard Similarity)")
+    print("=" * 60)
+
+    for _, row in results_df.iterrows():
+        print(f"\n  University         : {row['University']}")
+        print(f"  Jaccard Score      : {row['Jaccard_Score']:.4f}  ({row['Relevance_%']})")
+        print(f"  Curriculum tokens  : {row['Curriculum_Tokens']}")
+        print(f"  Matched with market: {row['Common_Tokens']}")
+        print(f"  Matched skills     : {row['Matched_Skills'][:120]}")
+
+
 def Similarity_Measures(market_demand_skills):
     # Initialize Model
     model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -469,7 +546,7 @@ def Similarity_Measures(market_demand_skills):
     market_embeddings = model.encode(market_text, convert_to_tensor=True)
 
     # Similarity Model Test_Data
-    df_features = pd.read_csv('Data.csv')
+    df_features = pd.read_csv('Output.csv')
 
     def get_scores(course_skills):
         if not course_skills:
@@ -543,11 +620,11 @@ def main():
     df = pd.read_csv("Data.csv")
 
     df["Skills"] = df["Skills"].apply(clean_skills_cell)
-    print(df.head())
     #DataAnalysis(df)
-    #mock_data = mock_market_demand()
+    market_data = market_demand_skills()
 
     #test_Sbert(df)
+    jaccard_relavance(df,market_data)
     #uni_score = Similarity_Measures(mock_data)
     #plot_charts(uni_score, df, mock_data)
 
