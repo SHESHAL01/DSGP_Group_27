@@ -237,17 +237,14 @@ def parse_market_skills(raw: str) -> set:
 
 def market_demand_skills():
     # Test "Market Demand Analyzer" output
-    skill_df = pd.read_csv('skill_Data.csv')
-    market_demand_skills_set = set()
+    market_df = pd.read_csv("extracted_skills.csv")
+    
+    # ── Build market skill set
+    market_skills = set()
+    for raw in market_df["extracted_skills"].dropna():
+        market_skills |= parse_market_skills(raw)
 
-    for row in skill_df['Skills']:
-        if isinstance(row, str):
-            # Split each row by comma, strip whitespace, and convert to lowercase
-            skills = [s.strip().lower() for s in row.split(',')]
-            market_demand_skills_set.update(skills)
-
-    market_demand_skills = list(market_demand_skills_set)
-    return market_demand_skills
+    return market_skills
 
 
 def test_Sbert(df):
