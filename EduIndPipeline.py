@@ -10,6 +10,7 @@ from sentence_transformers.datasets import DenoisingAutoEncoderDataset
 import torch
 from tqdm import tqdm
 from torch.optim import AdamW
+import re
 
 def DataAnalysis(df):
     print("DATASET OVERVIEW")
@@ -48,14 +49,6 @@ def DataAnalysis(df):
     print(df['Year'].value_counts().sort_index())
 
 
-def clean_data(df):
-    # Removing duplicates and Nan values
-    df = df.dropna()
-    df = df.drop_duplicates(keep='first')
-
-    # Fixing inconsistent data
-    df['Degree Program'] = df['Degree Program'].str.strip().str.lower().str.capitalize()
-    df['Course Name'] = df['Course Name'].str.strip().str.lower().str.capitalize()
 
 
 def mock_market_demand():
@@ -292,7 +285,7 @@ def test_Sbert(df):
     plt.savefig('loss_curve.png', dpi=150, bbox_inches='tight')
     plt.show()
     print("[INFO] Loss curve saved to 'loss_curve.png'")
-    
+
 def Similarity_Measures(market_demand_skills):
     # Initialize Model
     model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -374,17 +367,13 @@ def plot_charts(df_uni_score, df_features, market_demand_skills):
         print(f"Recommendation: Consider adding modules for {', '.join(list(skill_gap)[:3])} to improve alignment")
 
 def main():
-    data = pd.read_csv('data.csv')
+    data = pd.read_csv('Data.csv')
 
     df = pd.DataFrame(data)
-    #df.head()
     #DataAnalysis(df)
-    #clean_data(df)
-    #DataAnalysis(df)
-    mock_data = mock_market_demand()
+    #mock_data = mock_market_demand()
 
-    #sbert_model(df,mock_data)
-    test_Sbert(df)
+    #test_Sbert(df)
     #uni_score = Similarity_Measures(mock_data)
     #plot_charts(uni_score, df, mock_data)
 
