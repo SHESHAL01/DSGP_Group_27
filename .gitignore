@@ -9,3 +9,6 @@ skill_bert/checkpoint-43/optimizer.pt
 skill_bert/checkpoint-86/model.safetensors
 skill_bert/checkpoint-129/optimizer.pt
 skill_bert/checkpoint-215/model.safetensors
+.idea/workspace.xml
+.idea/workspace.xml
+*.xml

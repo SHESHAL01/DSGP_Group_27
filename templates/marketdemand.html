@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillSync – Market Demand Analyzer</title>
+    <link rel="stylesheet" href="marketdemand.css">
+</head>
+
+<body>
+
+<header class="header">
+    <div class="logo">
+        <img src="Skill Sync Logo.png" alt="SkillSync Logo">
+    </div>
+
+    <nav class="navbar">
+        <ul>
+            <li><a href="skillsync.html">Home</a></li>
+            <li><a href="#">Explore</a></li>
+            <li><a href="recommendation.html">Recommendations</a></li>
+            <li><a href="#">Contact</a></li>
+        </ul>
+    </nav>
+</header>
+
+<main class="container">
+
+    <!-- HERO -->
+    <section class="hero">
+        <h1>Market Demand Analyzer</h1>
+        <p>Understand which skills employers in Sri Lanka value most for your role.</p>
+    </section>
+
+    <!-- INPUT CARD -->
+    <section class="control-panel">
+        <div class="control-content">
+            <select id="roleSelect">
+                <option value="software engineer">Software Engineer</option>
+                <option value="qa engineer">QA Engineer</option>
+                <option value="cybersecurity engineer">Cyber-Security Engineer</option>
+                <option value="data engineer">Data Engineer</option>
+                <option value="devops engineer">DevOps Engineer</option>
+                <option value="embedded engineer">Embedded Engineer</option>
+                <option value="data scientist">Data Scientist</option>
+                <option value="data analyst">Data Analyst</option>
+                <option value="database administrator">Database Administrator</option>
+            </select>
+
+            <button onclick="getSkills()" class="btn-primary">
+                Analyze Market Demand
+            </button>
+        </div>
+    </section>
+
+    <!-- RESULTS -->
+    <section id="results" class="results-section placeholder">
+        <p class="placeholder-text">
+            Select a role to view the most in-demand skills in the current job market.
+        </p>
+    </section>
+
+</main>
+
+<footer class="footer">
+    © 2026 SkillSync | All Rights Reserved
+</footer>
+
+<script>
+
+async function getSkills() {
+
+    const role = document.getElementById("roleSelect").value;
+
+    const response = await fetch("/get_skills", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ role: role })
+    });
+
+    const data = await response.json();
+
+    let html = "<h2>Top Skills</h2><ul>";
+
+    data.skills.forEach(skill => {
+        html += `<li>${skill}</li>`;
+    });
+
+    html += "</ul>";
+
+    document.getElementById("results").innerHTML = html;
+}
+
+</script>
+
+</body>
+</html>
