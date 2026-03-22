@@ -12,6 +12,7 @@ from tqdm import tqdm
 from torch.optim import AdamW
 import re
 import ast
+from sklearn.metrics.pairwise import cosine_similarity
 
 def DataAnalysis(df):
     print("DATASET OVERVIEW")
@@ -149,7 +150,6 @@ def expand_parentheses(text: str) -> list:
 
     return [r for r in results if r]
 
-
 # Handle slashes OUTSIDE parentheses
 def split_slash(skill: str) -> list:
     """
@@ -179,7 +179,6 @@ def split_slash(skill: str) -> list:
         return [skill]
 
     return [p.strip() for p in processed.split("§") if p.strip()]
-
 
 # Remove stopwords from a single skill phrase
 def remove_stopwords(skill: str) -> str:
@@ -238,7 +237,7 @@ def parse_market_skills(raw: str) -> set:
 def market_demand_skills():
     # Test "Market Demand Analyzer" output
     market_df = pd.read_csv("extracted_skills.csv")
-    
+
     # ── Build market skill set
     market_skills = set()
     for raw in market_df["extracted_skills"].dropna():
@@ -532,6 +531,143 @@ def jaccard_relavance(df, market_skills):
         print(f"  Matched with market: {row['Common_Tokens']}")
         print(f"  Matched skills     : {row['Matched_Skills'][:120]}")
 
+def cosine_relavance(df, market_df):
+
+    # INPUT VARIABLES
+    MATCH_THRESHOLD = 0.5
+
+    TOP_N_GAPS = 5  # how many gap skills to surface per university
+
+    # LOAD MODEL
+    curriculum_model = SentenceTransformer('custom_it_curriculum_model')  # fine-tuned
+
+    # PARSE & DEDUPLICATE MARKET SKILLS
+    def parse_skill_list(raw: str) -> list:
+        """Return a Python list of skill strings from a stringified list."""
+        try:
+            result = ast.literal_eval(raw)
+            return result if isinstance(result, list) else [str(raw)]
+        except Exception:
+            return [str(raw)]
+
+    all_market_skills = []
+    for raw in market_df['extracted_skills']:
+        all_market_skills.extend(parse_skill_list(raw))
+
+    seen = set()
+    unique_market_skills = []
+    for s in all_market_skills:
+        s_clean = s.strip().lower()
+        if s_clean and s_clean not in seen:
+            seen.add(s_clean)
+            unique_market_skills.append(s.strip())
+
+    total_market_skills = len(unique_market_skills)
+    print(f"[INFO] Total unique market skills: {total_market_skills}")
+    print(f"[INFO] Match threshold: {MATCH_THRESHOLD}")
+
+    # EMBED MARKET SKILLS
+    print("\n[INFO] Embedding market skills...")
+    market_embeddings = curriculum_model.encode(
+        unique_market_skills,
+        batch_size=64,
+        show_progress_bar=True,
+        convert_to_numpy=True
+    )
+
+    # EMBED CURRICULUM SKILLS
+    print("\n[INFO] Embedding curriculum skills...")
+    df['embeddings'] = list(curriculum_model.encode(
+        df['Skills'].tolist(),
+        batch_size=64,
+        show_progress_bar=True,
+        convert_to_numpy=True
+    ))
+
+    # SCORE EACH UNIVERSITY
+    #
+    #   For every market skill:
+    #     best_score = max cosine_similarity(market_skill, all course skills in uni)
+    #
+    #   A market skill is "matched" if best_score >= MATCH_THRESHOLD
+    #
+    #   Relevance Score (%) = (matched_skills / total_market_skills) × 100
+    #   Gap skills           = market skills that were NOT matched
+    # ─────────────────────────────────────────────
+    score_rows = []
+    rec_rows = []
+
+    for university, group in df.groupby('University'):
+        uni_embeddings = np.stack(group['embeddings'].values)
+
+        # Cosine similarity: shape (num_market_skills, num_courses)
+        sim_matrix = cosine_similarity(market_embeddings, uni_embeddings)
+
+        # Best score per market skill across all courses
+        best_scores = sim_matrix.max(axis=1)  # shape: (num_market_skills,)
+
+        # ── Relevance score
+        matched_mask = best_scores >= MATCH_THRESHOLD
+        matched_count = int(matched_mask.sum())
+        relevance_pct = round((matched_count / total_market_skills) * 100, 2)
+
+        score_rows.append({
+            'University': university,
+            'Num_Courses': len(group),
+            'Matched_Skills': matched_count,
+            'Total_Market_Skills': total_market_skills,
+            'Relevance_Score_%': relevance_pct,
+        })
+
+        # ── Gap analysis
+        gap_skills = [
+            (unique_market_skills[i], round(float(best_scores[i]) * 100, 1))
+            for i in np.where(~matched_mask)[0]
+        ]
+        gap_skills.sort(key=lambda x: x[1])  # most missing first
+        top_gaps = gap_skills[:TOP_N_GAPS]
+
+        rec_rows.append({
+            'University': university,
+            'Relevance_Score_%': relevance_pct,
+            'Gap_Skills_Count': len(gap_skills),
+            'Recommended_Skills': ', '.join([s for s, _ in top_gaps]),
+            'Coverage_Scores_%': ', '.join([str(c) for _, c in top_gaps]),
+        })
+
+    # RESULTS
+    score_df = (
+        pd.DataFrame(score_rows)
+        .sort_values('Relevance_Score_%', ascending=False)
+        .reset_index(drop=True)
+    )
+    score_df.index += 1  # rank from 1
+
+    rec_df = (
+        pd.DataFrame(rec_rows)
+        .sort_values('Relevance_Score_%', ascending=False)
+        .reset_index(drop=True)
+    )
+    rec_df.index += 1
+
+    # ── Console output
+    print("\n" + "=" * 65)
+    print("    CURRICULUM RELEVANCE SCORES  (ranked)")
+    print("=" * 65)
+    print(score_df.to_string())
+    print("=" * 65)
+
+    print("\n" + "=" * 65)
+    print("    SKILL GAP RECOMMENDATIONS  (per university)")
+    print("=" * 65)
+    for _, row in rec_df.iterrows():
+        print(f"\n  {row['University']}  —  Relevance: {row['Relevance_Score_%']}%"
+              f"  |  Gap skills: {row['Gap_Skills_Count']}")
+        skills = row['Recommended_Skills'].split(', ')
+        scores = row['Coverage_Scores_%'].split(', ')
+        for skill, score in zip(skills, scores):
+            print(f"    • {skill:<40}  (best match: {score}%)")
+    print("\n" + "=" * 65)
 
 def Similarity_Measures(market_demand_skills):
     # Initialize Model
@@ -615,13 +751,15 @@ def plot_charts(df_uni_score, df_features, market_demand_skills):
 
 def main():
     df = pd.read_csv("Data.csv")
+    market_data_cos = pd.read_csv("extracted_skills.csv")
 
     df["Skills"] = df["Skills"].apply(clean_skills_cell)
     #DataAnalysis(df)
     market_data = market_demand_skills()
 
     #test_Sbert(df)
-    jaccard_relavance(df,market_data)
+    #jaccard_relavance(df,market_data)
+    cosine_relavance(df,market_data_cos)
     #uni_score = Similarity_Measures(mock_data)
     #plot_charts(uni_score, df, mock_data)
 
