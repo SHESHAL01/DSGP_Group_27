@@ -477,7 +477,7 @@ def jaccard_similarity(set_a: set, set_b: set) -> float:
     """Jaccard = |A ∩ B| / |A ∪ B|"""
     if not set_a or not set_b:
         return 0.0
-    return round(len(set_a & set_b) / len(set_a | set_b), 4)
+    return round(len(set_a & set_b) / len(set_b), 4)
 
 def jaccard_relavance(df, market_skills):
 
@@ -506,7 +506,6 @@ def jaccard_relavance(df, market_skills):
             for token in phrase_to_tokens(phrase.strip())
         ]
     )
-    df.to_csv("universities.csv", index=False)
     # ── Jaccard similarity per university
 
     results = []
@@ -545,7 +544,7 @@ def jaccard_relavance(df, market_skills):
 def cosine_relavance(df, market_df):
 
     # INPUT VARIABLES
-    MATCH_THRESHOLD = 0.6
+    MATCH_THRESHOLD = 0.68
 
     TOP_N_GAPS = 5  # how many gap skills to surface per university
 
@@ -729,9 +728,9 @@ def main():
     market_data = market_demand_skills()
 
     #test_Sbert(df)
-    jaccard_relavance(df,market_data)
+    #jaccard_relavance(df,market_data)
     #cosine_relavance(df,market_data_cos)
-    #plot_charts(df, market_data, market_data_cos)
+    plot_charts(df, market_data, market_data_cos)
 
 if __name__ == '__main__':
     main()
