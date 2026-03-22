@@ -324,7 +324,7 @@ def test_Sbert(df):
     # ─────────────────────────────────────────────
     optimizer = AdamW(
         list(model.parameters()) + list(loss_fn.parameters()),
-        lr=1e-5,
+        lr=3e-5,
         weight_decay=0.01
     )
 
@@ -336,7 +336,7 @@ def test_Sbert(df):
     #     • Optimal       → both decrease and level together
     #     • Overfitting   → train↓ but val turns back up
     # ─────────────────────────────────────────────
-    MAX_EPOCHS = 15
+    MAX_EPOCHS = 10
     train_losses = []
     val_losses = []
     best_val_loss = float('inf')
@@ -498,6 +498,15 @@ def jaccard_relavance(df, market_skills):
 
     print(f"Universities found: {list(university_skills.keys())}\n")
 
+    # Tokenize every skill cell → flat list of individual word tokens per row
+    df["Skills"] = df["Skills"].apply(
+        lambda raw: [
+            token
+            for phrase in str(raw).split(",")
+            for token in phrase_to_tokens(phrase.strip())
+        ]
+    )
+    df.to_csv("universities.csv", index=False)
     # ── Jaccard similarity per university
 
     results = []
@@ -717,10 +726,10 @@ def main():
 
     df["Skills"] = df["Skills"].apply(clean_skills_cell)
     #DataAnalysis(df)
-    #market_data = market_demand_skills()
+    market_data = market_demand_skills()
 
-    test_Sbert(df)
-    #jaccard_relavance(df,market_data)
+    #test_Sbert(df)
+    jaccard_relavance(df,market_data)
     #cosine_relavance(df,market_data_cos)
     #plot_charts(df, market_data, market_data_cos)
 
