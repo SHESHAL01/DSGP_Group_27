@@ -195,3 +195,29 @@ body {
         gap: 15px;
     }
 }
+
+/* Course link styling */
+.job-card a {
+    color: #ffffff;  /* White color for links */
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.job-card a:hover {
+    color: #00ffe1;  /* Cyan color on hover */
+    background: rgba(0, 255, 225, 0.1);
+}
+
+/* Alternative if you want the link without background */
+.job-card a.clean-link {
+    background: none;
+    padding: 0;
+}
+
+.job-card a.clean-link:hover {
+    background: none;
+}
