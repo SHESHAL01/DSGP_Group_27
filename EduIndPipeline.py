@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-from fuzzywuzzy import fuzz
 import matplotlib.pyplot as plt
 import logging
 from sklearn.model_selection import train_test_split
@@ -717,11 +716,11 @@ def main():
 
     df["Skills"] = df["Skills"].apply(clean_skills_cell)
     #DataAnalysis(df)
-    #market_data = market_demand_skills()
+    market_data = market_demand_skills()
 
     test_Sbert(df)
-    #jaccard_relavance(df,market_data)
-    #cosine_relavance(df,market_data_cos)
+    jaccard_relavance(df,market_data)
+    cosine_relavance(df,market_data_cos)
     #plot_charts(df, market_data, market_data_cos)
 
 if __name__ == '__main__':
