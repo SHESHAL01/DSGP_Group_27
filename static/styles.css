@@ -618,3 +618,132 @@ html {
 .insight-card:hover::before {
     filter: brightness(1.1);
 }
+
+
+/* ===================================
+   Spin Animation
+   Used by .spin-icon inside refresh / export buttons
+   =================================== */
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+.spin-icon {
+    display: inline-block;
+    animation: spin 1s linear infinite;
+    vertical-align: middle;
+}
+
+
+/* ===================================
+   Notification Toast
+   =================================== */
+
+@keyframes slideInRight {
+    from { transform: translateX(400px); opacity: 0; }
+    to   { transform: translateX(0);     opacity: 1; }
+}
+
+@keyframes slideOutRight {
+    from { transform: translateX(0);     opacity: 1; }
+    to   { transform: translateX(400px); opacity: 0; }
+}
+
+.notification {
+    position: fixed;
+    top: 90px;
+    right: 20px;
+    padding: 1rem 1.5rem;
+    border-radius: var(--radius-lg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    color: var(--color-text-primary);
+    font-family: var(--font-primary);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    z-index: 1000;
+    min-width: 280px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.notification-hide {
+    animation: slideOutRight 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.notification-success {
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.5);
+}
+
+.notification-error {
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.5);
+}
+
+.notification-info {
+    background: rgba(45, 212, 191, 0.15);
+    border: 1px solid rgba(45, 212, 191, 0.5);
+}
+
+.notification-inner {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.notification-icon {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.notification-success .notification-icon { color: rgba(16, 185, 129, 1); }
+.notification-error   .notification-icon { color: rgba(239, 68, 68, 1);  }
+.notification-info    .notification-icon { color: rgba(45, 212, 191, 1); }
+
+
+/* ===================================
+   Section Scroll Animations
+   JS adds .section-hidden on init, then
+   swaps to .section-visible on intersect.
+   =================================== */
+
+.section-hidden {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+.section-visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+
+
+/* ===================================
+   Chart Container – Loading State
+   JS toggles the .loading class
+   =================================== */
+
+.chart-container {
+    transition: opacity 0.3s ease;
+}
+
+.chart-container.loading {
+    opacity: 0.5;
+}
+
+
+/* ===================================
+   Insight Card – Click Feedback
+   JS adds .card-clicked for 150 ms
+   =================================== */
+
+.insight-card.card-clicked {
+    transform: scale(0.98) translateY(-6px);
+    transition: transform 0.15s ease;
+}

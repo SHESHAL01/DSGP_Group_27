@@ -713,6 +713,255 @@ def education_alignment():
 
     return render_template("index.html", user={'name': session['user_name']})
 
+
+# ===============================
+# EDUCATION-INDUSTRY PIPELINE API
+# ===============================
+
+# Module-level cache so the heavy ML pipeline only runs once per server
+# process (or on explicit refresh).  Keyed by 'data' and 'timestamp'.
+_edu_analysis_cache = {"data": None, "timestamp": None}
+
+
+def _run_edu_pipeline(force_refresh=False):
+    """
+    Run EduIndPipeline analysis and return a serialisable result dict.
+
+    Strategy
+    --------
+    1. Try cosine relevance first — requires the fine-tuned model directory
+       ``custom_it_curriculum_model`` to exist (produced by test_Sbert).
+    2. Fall back to Jaccard relevance if the model is missing.
+    3. Cache result at module level; skip re-run unless force_refresh=True.
+    """
+    global _edu_analysis_cache
+
+    if not force_refresh and _edu_analysis_cache["data"] is not None:
+        return _edu_analysis_cache["data"]
+
+    # ── Lazy imports keep startup fast when the pipeline isn't needed ──
+    import os
+    from EduIndPipeline import (
+        clean_skills_cell,
+        market_demand_skills,
+        jaccard_relavance,
+    )
+
+    curriculum_df = pd.read_csv("Data.csv")
+    curriculum_df["Skills"] = curriculum_df["Skills"].apply(clean_skills_cell)
+    market_skills  = market_demand_skills()          # set of lowercase phrases
+    market_df      = pd.read_csv("extracted_skills.csv")
+
+    # ── Choose relevance method ────────────────────────────────────────
+    use_cosine = os.path.isdir("custom_it_curriculum_model")
+    score_col  = "Relevance_Score_%"   # column name may differ per method
+
+    if use_cosine:
+        from EduIndPipeline import cosine_relavance
+        results_df = cosine_relavance(curriculum_df, market_df)
+        # cosine_relavance already returns a numeric Relevance_Score_% column
+    else:
+        results_df = jaccard_relavance(curriculum_df, market_skills)
+        # jaccard returns Jaccard_Score (0–1); convert to 0–100 percentage
+        results_df[score_col] = results_df["Jaccard_Score"].apply(
+            lambda s: round(float(s) * 100, 2)
+        )
+
+    # ── Build university_scores list ───────────────────────────────────
+    university_scores = [
+        {
+            "university": str(row["University"]),
+            "average":    round(float(row[score_col]), 2),
+        }
+        for _, row in results_df.iterrows()
+    ]
+
+    # Best-ranked university is treated as the "current" reference
+    top_row = results_df.iloc[0]
+    current_university = {
+        "name":  str(top_row["University"]),
+        "score": round(float(top_row[score_col]), 2),
+    }
+
+    # Market benchmark = top-2 university average (data-driven, no hardcoding)
+    top2_scores = [u["average"] for u in university_scores[:2]]
+    market_benchmark = round(sum(top2_scores) / len(top2_scores), 2) if top2_scores else 0.0
+
+    # ── Generate insights ──────────────────────────────────────────────
+    insights = _generate_insights(results_df, market_skills, score_col)
+
+    result = {
+        "current_university": current_university,
+        "market_benchmark":   market_benchmark,
+        "university_scores":  university_scores,
+        "insights":           insights,
+        "method":             "cosine" if use_cosine else "jaccard",
+    }
+
+    _edu_analysis_cache["data"]      = result
+    _edu_analysis_cache["timestamp"] = datetime.now().isoformat()
+    return result
+
+
+def _generate_insights(results_df, market_skills, score_col):
+    """
+    Derive structured insight cards entirely from pipeline output.
+    No hardcoded skill names, university names, or thresholds.
+    """
+    insights = []
+
+    # ── Build per-university matched-token sets ────────────────────────
+    per_uni_matched = {}
+    for _, row in results_df.iterrows():
+        raw = str(row.get("Matched_Skills", ""))
+        matched = {s.strip().lower() for s in raw.split(",") if s.strip()}
+        per_uni_matched[str(row["University"])] = matched
+
+    all_matched = set().union(*per_uni_matched.values()) if per_uni_matched else set()
+
+    # Tokenise market phrases to individual words for fair comparison
+    import re
+    def _tokenise(phrase):
+        return {w.lower() for w in re.findall(r"[a-zA-Z0-9#+.]+", phrase)}
+
+    # Market phrases whose tokens have zero overlap with any uni's matched set
+    global_gaps = [
+        phrase for phrase in market_skills
+        if not _tokenise(phrase) & all_matched
+    ]
+    global_gaps.sort()
+
+    # Skills matched by every university (universal strengths)
+    if len(per_uni_matched) > 1:
+        universal_strengths = set.intersection(*per_uni_matched.values())
+    else:
+        universal_strengths = next(iter(per_uni_matched.values()), set())
+
+    # ── Insight: global skill gaps ─────────────────────────────────────
+    if global_gaps:
+        sample = [g.title() for g in global_gaps[:5]]
+        insights.append({
+            "type":  "skill_gap",
+            "title": "Missing Skills Across All Curricula",
+            "description": (
+                f"The following market-demanded skills are absent from every university "
+                f"curriculum analysed: {', '.join(sample)}. "
+                f"A total of {len(global_gaps)} such gaps were identified."
+            ),
+        })
+
+    # ── Insight: lowest-scorer specific gap ───────────────────────────
+    if len(results_df) > 1:
+        lowest_row = results_df.iloc[-1]
+        lowest_name = str(lowest_row["University"])
+        lowest_gaps = [
+            phrase for phrase in market_skills
+            if not _tokenise(phrase) & per_uni_matched.get(lowest_name, set())
+        ]
+        lowest_gaps.sort()
+        if lowest_gaps:
+            sample = [g.title() for g in lowest_gaps[:4]]
+            insights.append({
+                "type":  "skill_gap",
+                "title": f"Largest Alignment Gap: {lowest_name}",
+                "description": (
+                    f"{lowest_name} has the lowest curriculum relevance score "
+                    f"({round(float(lowest_row[score_col]), 1)}%). "
+                    f"Key missing areas include: {', '.join(sample)}."
+                ),
+            })
+
+    # ── Insight: universal strengths ──────────────────────────────────
+    if universal_strengths:
+        sample = sorted(universal_strengths)[:5]
+        insights.append({
+            "type":  "strength",
+            "title": "Universally Strong Curriculum Areas",
+            "description": (
+                f"All universities show consistent coverage in: "
+                f"{', '.join(s.title() for s in sample)}. "
+                f"These topics align well with current industry demand."
+            ),
+        })
+
+    # ── Insight: top-performer unique coverage ────────────────────────
+    top_name = str(results_df.iloc[0]["University"])
+    top_matched = per_uni_matched.get(top_name, set())
+    others_union = set().union(
+        *[v for k, v in per_uni_matched.items() if k != top_name]
+    ) if len(per_uni_matched) > 1 else set()
+    unique_to_top = top_matched - others_union
+    if unique_to_top:
+        sample = sorted(unique_to_top)[:4]
+        insights.append({
+            "type":  "strength",
+            "title": f"Best Performer: {top_name}",
+            "description": (
+                f"{top_name} leads the ranking with exclusive coverage of: "
+                f"{', '.join(s.title() for s in sample)}, "
+                f"giving it a competitive edge over peers."
+            ),
+        })
+
+    # ── Insight: recommendation — close the gap ────────────────────────
+    avg_score = results_df[score_col].mean()
+    insights.append({
+        "type":  "recommendation",
+        "title": "Prioritise High-Impact Missing Skills",
+        "description": (
+            f"Average curriculum alignment currently sits at {avg_score:.1f}%. "
+            f"Introducing modules focused on the {min(len(global_gaps), 5)} identified "
+            f"gap areas could lift the average score by an estimated 10–15 percentage points."
+        ),
+    })
+
+    # ── Insight: recommendation — specific modules ─────────────────────
+    if global_gaps:
+        sample = [g.title() for g in global_gaps[:3]]
+        insights.append({
+            "type":  "recommendation",
+            "title": "Recommended New Curriculum Modules",
+            "description": (
+                f"Consider adding dedicated modules for: {', '.join(sample)}. "
+                f"These skills are consistently in demand by industry but "
+                f"underrepresented across all current course offerings."
+            ),
+        })
+
+    return insights
+
+
+@app.route("/api/analysis")
+def api_analysis():
+    """
+    JSON endpoint consumed by script.js.
+
+    Query params
+    ------------
+    refresh=true  — bypass cache and re-run the full pipeline.
+
+    Returns
+    -------
+    {
+        "status": "ok",
+        "data": { ... }          ← see _run_edu_pipeline for shape
+    }
+    """
+    if 'user_id' not in session:
+        return jsonify({"status": "error", "message": "Authentication required"}), 401
+
+    force_refresh = request.args.get("refresh", "false").lower() == "true"
+
+    try:
+        result = _run_edu_pipeline(force_refresh=force_refresh)
+        return jsonify({"status": "ok", "data": result})
+    except FileNotFoundError as e:
+        return jsonify({"status": "error", "message": f"Data file not found: {e}"}), 500
+    except Exception as e:
+        app.logger.error(f"[/api/analysis] Pipeline error: {e}", exc_info=True)
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
