@@ -686,7 +686,7 @@ def main():
     #DataAnalysis(df)
     market_data = market_demand_skills()
 
-    test_Sbert(df)
+    #test_Sbert(df)
     jaccard_relavance(df,market_data)
     cosine_relavance(df,market_data_cos)
     #plot_charts(df, market_data, market_data_cos)
