@@ -272,7 +272,7 @@ def test_Sbert(df):
     # ─────────────────────────────────────────────
     # BUILD THE SENTENCE TRANSFORMER MODEL
     # ─────────────────────────────────────────────
-    model_name = 'bert-base-uncased'
+    model_name = 'sentence-transformers/all-MiniLM-L6-v2'
 
     word_embedding_model = models.Transformer(model_name)
     pooling_model = models.Pooling(
@@ -324,7 +324,7 @@ def test_Sbert(df):
     # ─────────────────────────────────────────────
     optimizer = AdamW(
         list(model.parameters()) + list(loss_fn.parameters()),
-        lr=3e-5,
+        lr=1e-5,
         weight_decay=0.01
     )
 
@@ -336,7 +336,7 @@ def test_Sbert(df):
     #     • Optimal       → both decrease and level together
     #     • Overfitting   → train↓ but val turns back up
     # ─────────────────────────────────────────────
-    MAX_EPOCHS = 6
+    MAX_EPOCHS = 15
     train_losses = []
     val_losses = []
     best_val_loss = float('inf')
@@ -719,7 +719,7 @@ def main():
     #DataAnalysis(df)
     #market_data = market_demand_skills()
 
-    #test_Sbert(df)
+    test_Sbert(df)
     #jaccard_relavance(df,market_data)
     #cosine_relavance(df,market_data_cos)
     #plot_charts(df, market_data, market_data_cos)
