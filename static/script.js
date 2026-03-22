@@ -56,63 +56,118 @@ function renderChart(data) {
     const ctx = document.getElementById('alignmentChart');
     if (!ctx) return;
 
-    const scores = data.university_scores || [];
-    const labels = scores.map(u => u.university);
-    const values = scores.map(u => u.average);
+    const scores  = data.university_scores || [];
+    const labels  = scores.map(u => u.university);
+    const cosineAvailable = data.cosine_available;
 
-    const benchmarkIdx = labels.findIndex(l => l.toLowerCase().includes('benchmark'));
-    const bgColors     = labels.map((_, i) => i === benchmarkIdx ? 'rgba(45,212,191,0.6)'  : 'rgba(100,116,139,0.7)');
-    const borderColors = labels.map((_, i) => i === benchmarkIdx ? 'rgba(45,212,191,1)'    : 'rgba(100,116,139,1)');
-    const hoverColors  = labels.map((_, i) => i === benchmarkIdx ? 'rgba(45,212,191,0.85)' : 'rgba(100,116,139,0.9)');
+    const jaccardValues = scores.map(u => u.jaccard);
+    const cosineValues  = scores.map(u => u.cosine);
+
+    // Build datasets — always show Jaccard; show Cosine only if model ran
+    const datasets = [];
+
+    if (cosineAvailable) {
+        datasets.push({
+            label:                'Cosine Relevance %',
+            data:                 cosineValues,
+            backgroundColor:      'rgba(45, 212, 191, 0.7)',
+            borderColor:          'rgba(45, 212, 191, 1)',
+            hoverBackgroundColor: 'rgba(45, 212, 191, 0.9)',
+            borderWidth:   2,
+            borderRadius:  8,
+            barPercentage: 0.4,
+        });
+    }
+
+    datasets.push({
+        label:                'Jaccard Relevance %',
+        data:                 jaccardValues,
+        backgroundColor:      'rgba(245, 158, 11, 0.7)',
+        borderColor:          'rgba(245, 158, 11, 1)',
+        hoverBackgroundColor: 'rgba(245, 158, 11, 0.9)',
+        borderWidth:   2,
+        borderRadius:  8,
+        barPercentage: 0.4,
+    });
 
     const config = {
         type: 'bar',
-        data: {
-            labels,
-            datasets: [{
-                label: 'Alignment %',
-                data:  values,
-                backgroundColor:      bgColors,
-                borderColor:          borderColors,
-                hoverBackgroundColor: hoverColors,
-                borderWidth:   2,
-                borderRadius:  10,
-                barThickness:  80,
-            }]
-        },
+        data: { labels, datasets },
         options: {
             responsive: true,
             maintainAspectRatio: true,
             aspectRatio: 2.5,
             plugins: {
-                legend: { display: false },
+                legend: {
+                    display: true,
+                    position: 'top',
+                    align: 'end',
+                    labels: {
+                        color:     '#94a3b8',
+                        font:      { family: 'Poppins', size: 12, weight: '500' },
+                        boxWidth:  14,
+                        boxHeight: 14,
+                        borderRadius: 4,
+                        padding:   20,
+                        usePointStyle: false,
+                    }
+                },
                 tooltip: {
-                    backgroundColor: 'rgba(10,25,41,0.95)',
-                    titleColor: '#2dd4bf',
-                    bodyColor:  '#94a3b8',
-                    padding:    16,
-                    borderColor: 'rgba(45,212,191,0.3)',
+                    backgroundColor: 'rgba(10, 25, 41, 0.95)',
+                    titleColor:  '#2dd4bf',
+                    bodyColor:   '#94a3b8',
+                    padding:     16,
+                    borderColor: 'rgba(45, 212, 191, 0.3)',
                     borderWidth: 1,
-                    displayColors: false,
+                    displayColors: true,
                     titleFont: { family: 'Poppins', size: 14, weight: '600' },
                     bodyFont:  { family: 'Poppins', size: 13 },
-                    callbacks: { label: ctx => `Market Alignment: ${ctx.parsed.y.toFixed(1)}%` },
+                    callbacks: {
+                        label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y.toFixed(2)}%`
+                    },
                     cornerRadius: 8
                 }
             },
             scales: {
                 y: {
-                    beginAtZero: true, max: 100,
-                    ticks: { callback: v => v + '%', font: { family: 'Poppins', size: 12 }, color: '#94a3b8' },
+                    beginAtZero: true,
+                    max: 100,
+                    ticks: {
+                        callback: v => v + '%',
+                        font:  { family: 'Poppins', size: 12 },
+                        color: '#94a3b8',
+                    },
                     grid:  { color: 'rgba(255,255,255,0.05)', drawBorder: false },
-                    title: { display: true, text: 'Alignment %', font: { family: 'Poppins', size: 13, weight: '600' }, color: '#2dd4bf', padding: { bottom: 10 } }
+                    title: {
+                        display: true,
+                        text:    'Alignment Score (%)',
+                        font:    { family: 'Poppins', size: 13, weight: '600' },
+                        color:   '#2dd4bf',
+                        padding: { bottom: 10 }
+                    }
                 },
                 x: {
-                    ticks: { font: { family: 'Poppins', size: 11 }, color: '#94a3b8', maxRotation: 45, minRotation: 45 },
-                    grid: { display: false, drawBorder: false }
+                    ticks: {
+                        font:        { family: 'Poppins', size: 11 },
+                        color:       '#94a3b8',
+                        maxRotation: 0,
+                        minRotation: 0,
+                    },
+                    grid: { display: false, drawBorder: false },
+                    title: {
+                        display: true,
+                        text:    'University',
+                        font:    { family: 'Poppins', size: 13, weight: '600' },
+                        color:   '#94a3b8',
+                        padding: { top: 10 }
+                    }
                 }
             },
-            animation: { duration: 1500, easing: 'easeOutQuart', delay: ctx => ctx.dataIndex * 150 }
+            animation: {
+                duration: 1500,
+                easing:   'easeOutQuart',
+                delay:    ctx => ctx.dataIndex * 100
+            }
         }
     };
 
@@ -120,31 +175,43 @@ function renderChart(data) {
     alignmentChart = new Chart(ctx, config);
 
     ctx.addEventListener('mousemove', function (e) {
-        const pts = alignmentChart.getElementsAtEventForMode(e, 'nearest', { intersect: true }, false);
+        const pts = alignmentChart.getElementsAtEventForMode(
+            e, 'nearest', { intersect: true }, false
+        );
         e.target.style.cursor = pts.length ? 'pointer' : 'default';
     });
 }
-
 
 // ─── 2. Stat Cards ───────────────────────────────────────────────
 
 function renderStatCards(data) {
     const current     = data.current_university || {};
-    const benchmark   = data.market_benchmark   || 85;
-    const competitors = data.university_scores  || [];
+    const benchmark   = data.market_benchmark   || 0;
+    const scores      = data.university_scores  || [];
+    const cosineAvail = data.cosine_available;
 
-    const competitor = competitors.find(u =>
-        !u.university.toLowerCase().includes('benchmark') &&
-        u.university !== current.name
-    ) || {};
+    // Pick a university that isn't the top one for the third card
+    const other = scores.find(u => u.university !== current.name) || {};
 
     const cards = document.querySelectorAll('.stat-card');
     if (!cards.length) return;
 
     const updates = [
-        { label: current.name    || 'University A',     value: current.score    ?? 72, desc: 'Market Alignment' },
-        { label: 'Market Benchmark',                     value: benchmark,              desc: 'Market Alignment' },
-        { label: competitor.university || 'Competitor',  value: competitor.average ?? 68, desc: 'Market Alignment' },
+        {
+            label: (current.name || 'Top University').toUpperCase(),
+            value: cosineAvail ? current.cosine : current.jaccard,
+            desc:  cosineAvail ? 'Cosine Relevance' : 'Jaccard Relevance',
+        },
+        {
+            label: 'MARKET BENCHMARK',
+            value: benchmark,
+            desc:  'Average of top-2 universities',
+        },
+        {
+            label: (other.university || 'University').toUpperCase(),
+            value: cosineAvail ? (other.cosine ?? other.jaccard) : other.jaccard,
+            desc:  cosineAvail ? 'Cosine Relevance' : 'Jaccard Relevance',
+        },
     ];
 
     cards.forEach((card, i) => {
@@ -153,8 +220,8 @@ function renderStatCards(data) {
         const labelEl = card.querySelector('.stat-label');
         const valueEl = card.querySelector('.stat-value');
         const descEl  = card.querySelector('.stat-desc');
-        if (labelEl) labelEl.textContent = label.toUpperCase();
-        if (valueEl) animateNumber(valueEl, value);
+        if (labelEl) labelEl.textContent = label;
+        if (valueEl) animateNumber(valueEl, value ?? 0);
         if (descEl)  descEl.textContent  = desc;
     });
 }

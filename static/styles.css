@@ -747,3 +747,11 @@ html {
     transform: scale(0.98) translateY(-6px);
     transition: transform 0.15s ease;
 }
+/* ===================================
+   Chart Legend
+   =================================== */
+
+/* Rounded corners on Chart.js legend colour boxes */
+.chartjs-legend li span {
+    border-radius: 4px !important;
+}

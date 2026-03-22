@@ -724,78 +724,80 @@ _edu_analysis_cache = {"data": None, "timestamp": None}
 
 
 def _run_edu_pipeline(force_refresh=False):
-    """
-    Run EduIndPipeline analysis and return a serialisable result dict.
-
-    Strategy
-    --------
-    1. Try cosine relevance first — requires the fine-tuned model directory
-       ``custom_it_curriculum_model`` to exist (produced by test_Sbert).
-    2. Fall back to Jaccard relevance if the model is missing.
-    3. Cache result at module level; skip re-run unless force_refresh=True.
-    """
     global _edu_analysis_cache
 
     if not force_refresh and _edu_analysis_cache["data"] is not None:
         return _edu_analysis_cache["data"]
 
-    # ── Lazy imports keep startup fast when the pipeline isn't needed ──
     import os
     from EduIndPipeline import (
         clean_skills_cell,
         market_demand_skills,
         jaccard_relavance,
+        cosine_relavance,
     )
 
     curriculum_df = pd.read_csv("Data.csv")
     curriculum_df["Skills"] = curriculum_df["Skills"].apply(clean_skills_cell)
-    market_skills  = market_demand_skills()          # set of lowercase phrases
-    market_df      = pd.read_csv("extracted_skills.csv")
+    market_skills = market_demand_skills()
+    market_df     = pd.read_csv("extracted_skills.csv")
 
-    # ── Choose relevance method ────────────────────────────────────────
-    use_cosine = os.path.isdir("custom_it_curriculum_model")
-    score_col  = "Relevance_Score_%"   # column name may differ per method
+    # ── Run Jaccard (always available, no model needed) ────────────────
+    jaccard_df = jaccard_relavance(curriculum_df, market_skills)
+    jaccard_df["Jaccard_Pct"] = jaccard_df["Jaccard_Score"].apply(
+        lambda s: round(float(s) * 100, 2)
+    )
 
-    if use_cosine:
-        from EduIndPipeline import cosine_relavance
-        results_df = cosine_relavance(curriculum_df, market_df)
-        # cosine_relavance already returns a numeric Relevance_Score_% column
-    else:
-        results_df = jaccard_relavance(curriculum_df, market_skills)
-        # jaccard returns Jaccard_Score (0–1); convert to 0–100 percentage
-        results_df[score_col] = results_df["Jaccard_Score"].apply(
-            lambda s: round(float(s) * 100, 2)
-        )
-
-    # ── Build university_scores list ───────────────────────────────────
-    university_scores = [
-        {
-            "university": str(row["University"]),
-            "average":    round(float(row[score_col]), 2),
+    # ── Run Cosine (only if fine-tuned model exists) ───────────────────
+    cosine_available = os.path.isdir("custom_it_curriculum_model")
+    if cosine_available:
+        cosine_df = cosine_relavance(curriculum_df, market_df)
+        # cosine already returns a numeric Relevance_Score_% column
+        cosine_lookup = {
+            str(row["University"]): round(float(row["Relevance_Score_%"]), 2)
+            for _, row in cosine_df.iterrows()
         }
-        for _, row in results_df.iterrows()
-    ]
+    else:
+        cosine_lookup = {}
 
-    # Best-ranked university is treated as the "current" reference
-    top_row = results_df.iloc[0]
+    # ── Merge both scores into university_scores list ──────────────────
+    university_scores = []
+    for _, row in jaccard_df.iterrows():
+        uni_name = str(row["University"])
+        university_scores.append({
+            "university": uni_name,
+            "jaccard":    round(float(row["Jaccard_Pct"]), 2),
+            "cosine":     cosine_lookup.get(uni_name, None),  # None if model missing
+        })
+
+    # Sort descending by cosine if available, else jaccard
+    sort_key = "cosine" if cosine_available else "jaccard"
+    university_scores.sort(key=lambda u: u[sort_key] or 0, reverse=True)
+
+    # Top university for stat cards
+    top = university_scores[0]
     current_university = {
-        "name":  str(top_row["University"]),
-        "score": round(float(top_row[score_col]), 2),
+        "name":    top["university"],
+        "jaccard": top["jaccard"],
+        "cosine":  top["cosine"],
+        # primary score for stat card display
+        "score":   top["cosine"] if top["cosine"] is not None else top["jaccard"],
     }
 
-    # Market benchmark = top-2 university average (data-driven, no hardcoding)
-    top2_scores = [u["average"] for u in university_scores[:2]]
-    market_benchmark = round(sum(top2_scores) / len(top2_scores), 2) if top2_scores else 0.0
+    # Market benchmark = mean of top-2 primary scores
+    top2 = [u["cosine"] or u["jaccard"] for u in university_scores[:2]]
+    market_benchmark = round(sum(top2) / len(top2), 2) if top2 else 0.0
 
-    # ── Generate insights ──────────────────────────────────────────────
-    insights = _generate_insights(results_df, market_skills, score_col)
+    insights = _generate_insights(
+        jaccard_df, market_skills, "Jaccard_Pct"
+    )
 
     result = {
-        "current_university": current_university,
-        "market_benchmark":   market_benchmark,
-        "university_scores":  university_scores,
-        "insights":           insights,
-        "method":             "cosine" if use_cosine else "jaccard",
+        "current_university":  current_university,
+        "market_benchmark":    market_benchmark,
+        "university_scores":   university_scores,   # ← now has .jaccard and .cosine
+        "insights":            insights,
+        "cosine_available":    cosine_available,
     }
 
     _edu_analysis_cache["data"]      = result
