@@ -11,14 +11,14 @@
     <!-- Navigation -->
     <header class="header">
         <div class="logo">
-            <img src="Skill Sync Logo.png" alt="SkillSync Logo">
+            <img src="{{ url_for('static', filename='Skill Sync Logo.png') }}" alt="SkillSync Logo">
         </div>
 
         <nav class="navbar">
             <ul>
                 <li><a href="{{ url_for('skillsync_home') }}">Home</a></li>
                 <li><a href="{{ url_for('market_demand_page') }}">Market Analysis</a></li>
-                <li><a href="{{ url_for('education_alignment') }}"style="color: var(--accent-color);">Edu Analysis</a></li>
+                <li><a href="{{ url_for('education_alignment') }}" style="color: var(--accent-color);">Edu Analysis</a></li>
                 <li><a href="{{ url_for('employability_page') }}">Employability</a></li>
                 <li><a href="{{ url_for('profile') }}">Profile</a></li>
                 <li><a href="{{ url_for('logout') }}">Logout</a></li>
@@ -64,25 +64,29 @@
                         <p class="section-subtitle">Comparison against market benchmarks and competitors</p>
                     </div>
                 </div>
-                
+
+                <!-- Loading / Error Banner (shown by JS) -->
+                <div id="status-banner" style="display:none; padding: 1rem 1.5rem; border-radius: 0.75rem; margin-bottom: 1.5rem; font-family: var(--font-primary); font-size: 0.9375rem;"></div>
+
                 <div class="chart-container">
                     <canvas id="alignmentChart"></canvas>
                 </div>
 
-                <div class="stats-grid">
+                <div class="stats-grid" id="stats-grid">
+                    <!-- Populated dynamically by script.js -->
                     <div class="stat-card">
-                        <div class="stat-label">University A (Current)</div>
-                        <div class="stat-value">72%</div>
+                        <div class="stat-label">Loading…</div>
+                        <div class="stat-value">—</div>
                         <div class="stat-desc">Market Alignment</div>
                     </div>
                     <div class="stat-card highlight">
                         <div class="stat-label">Market Benchmark</div>
-                        <div class="stat-value">85%</div>
+                        <div class="stat-value">—</div>
                         <div class="stat-desc">Market Alignment</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">Competitor B</div>
-                        <div class="stat-value">68%</div>
+                        <div class="stat-label">Competitor</div>
+                        <div class="stat-value">—</div>
                         <div class="stat-desc">Market Alignment</div>
                     </div>
                 </div>
@@ -98,83 +102,14 @@
                     </div>
                 </div>
 
-                <div class="insights-grid">
-                    <!-- Skill Gap 1 -->
-                    <div class="insight-card skill-gap">
+                <div class="insights-grid" id="insights-grid">
+                    <!-- Populated dynamically by script.js -->
+                    <div class="insight-card" style="opacity:0.4">
                         <div class="insight-header">
-                            <div class="insight-icon">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <line x1="12" y1="16" x2="12" y2="12"></line>
-                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                                </svg>
-                            </div>
-                            <span class="insight-badge skill-gap-badge">Skill Gap</span>
+                            <span class="insight-badge" style="background:rgba(100,116,139,0.2);color:#94a3b8;border:1px solid rgba(100,116,139,0.3)">Loading…</span>
                         </div>
-                        <h3 class="insight-title">Missing Modern Framework Coverage</h3>
-                        <p class="insight-description">Popular frameworks like React, Angular, and Vue.js are highly demanded in the job market but are not present in the current curriculum.</p>
-                    </div>
-
-                    <!-- Skill Gap 2 -->
-                    <div class="insight-card skill-gap">
-                        <div class="insight-header">
-                            <div class="insight-icon">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <line x1="12" y1="16" x2="12" y2="12"></line>
-                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                                </svg>
-                            </div>
-                            <span class="insight-badge skill-gap-badge">Skill Gap</span>
-                        </div>
-                        <h3 class="insight-title">Limited Cloud Technology Training</h3>
-                        <p class="insight-description">Cloud computing skills (AWS, Azure, Google Cloud) are increasingly important but underrepresented in the curriculum.</p>
-                    </div>
-
-                    <!-- Strength -->
-                    <div class="insight-card strength">
-                        <div class="insight-header">
-                            <div class="insight-icon">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                                </svg>
-                            </div>
-                            <span class="insight-badge strength-badge">Strength</span>
-                        </div>
-                        <h3 class="insight-title">Strong Foundational Programming</h3>
-                        <p class="insight-description">Core programming languages like Python and JavaScript are well-covered and align with market demand.</p>
-                    </div>
-
-                    <!-- Recommendation 1 -->
-                    <div class="insight-card recommendation">
-                        <div class="insight-header">
-                            <div class="insight-icon">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                                </svg>
-                            </div>
-                            <span class="insight-badge recommendation-badge">Recommendation</span>
-                        </div>
-                        <h3 class="insight-title">Add Modern Web Development Module</h3>
-                        <p class="insight-description">Include a dedicated module covering React, Node.js, and modern web development frameworks to improve alignment with current job market trends by approximately 15%.</p>
-                    </div>
-
-                    <!-- Recommendation 2 -->
-                    <div class="insight-card recommendation">
-                        <div class="insight-header">
-                            <div class="insight-icon">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                                </svg>
-                            </div>
-                            <span class="insight-badge recommendation-badge">Recommendation</span>
-                        </div>
-                        <h3 class="insight-title">Update Server-Side Technologies</h3>
-                        <p class="insight-description">Consider replacing or supplementing PHP content with more modern backend technologies like Node.js, Python frameworks (Django/Flask), or containerization tools.</p>
+                        <h3 class="insight-title">Fetching insights from pipeline</h3>
+                        <p class="insight-description">Please wait while the analysis runs…</p>
                     </div>
                 </div>
             </section>
@@ -189,6 +124,6 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="static/script.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
