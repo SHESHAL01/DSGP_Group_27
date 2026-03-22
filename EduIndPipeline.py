@@ -531,6 +531,8 @@ def jaccard_relavance(df, market_skills):
         print(f"  Matched with market: {row['Common_Tokens']}")
         print(f"  Matched skills     : {row['Matched_Skills'][:120]}")
 
+    return results_df
+
 def cosine_relavance(df, market_df):
 
     # INPUT VARIABLES
@@ -669,31 +671,62 @@ def cosine_relavance(df, market_df):
             print(f"    • {skill:<40}  (best match: {score}%)")
     print("\n" + "=" * 65)
 
+    return score_df
 
+def plot_charts(df, market_skills,market_df ):
 
+    # ── 1. Run all three relevance functions ──────────────────────────
+    jaccard_df = jaccard_relavance(df, market_skills)  # returns df with Relevance_%
+    cosine_df = cosine_relavance(df, market_df)  # returns df with Relevance_Score_%
 
-def plot_charts(df_uni_score, df_features, market_demand_skills):
-    df_uni_score.plot(x='University', y=['Cosine_Relevance_%', 'Jaccard_Relevance_%', 'Fuzzy_Relevance_%'],
-                      kind='bar', figsize=(12, 6))
+    # ── 2. Normalise column names ─────────────────────────────────────
+    jaccard_df["Jaccard_Relevance_%"] = jaccard_df["Relevance_%"].str.replace("%", "").astype(float)
+    cosine_df["Cosine_Relevance_%"] = cosine_df["Relevance_Score_%"]
 
-    plt.title("Curriculum Relevance Comparison by Similarity Method")
-    plt.ylabel("Alignment Score (%)")
-    plt.legend(title="ML Models", bbox_to_anchor=(1.05, 1), loc='upper left')
-    plt.grid(axis='y', linestyle='--', alpha=0.7)
+    # ── 3. Merge into one frame ───────────────────────────────────────
+    merged = (jaccard_df[["University", "Jaccard_Relevance_%"]]
+              .merge(cosine_df[["University", "Cosine_Relevance_%"]], on="University")
+              .sort_values("University"))
+
+    # ── 4. Plot grouped bar chart ─────────────────────────────────────
+    universities = merged["University"].tolist()
+    x = np.arange(len(universities))
+    w = 0.25  # bar width
+
+    fig, ax = plt.subplots(figsize=(14, 6))
+
+    ax.bar(x - w, merged["Cosine_Relevance_%"], w, label="Cosine_Relevance_%", color="#1f77b4")
+    ax.bar(x, merged["Jaccard_Relevance_%"], w, label="Jaccard_Relevance_%", color="#ff7f0e")
+
+    ax.set_title("Curriculum Relevance Comparison by Similarity Method")
+    ax.set_xlabel("University")
+    ax.set_ylabel("Alignment Score (%)")
+    ax.set_xticks(x)
+    ax.set_xticklabels(universities)
+    ax.legend(title="ML Models")
+    ax.yaxis.grid(True, linestyle="--", alpha=0.7)
+    ax.set_axisbelow(True)
+
+    plt.tight_layout()
+    plt.savefig("curriculum_relevance.png", dpi=150)
     plt.show()
 
-    # Insight: Identify Skill Gaps
-    all_extracted_skills = [skill for sublist in df_features['Skills'] for skill in sublist]
-    taught_skills_unique = set([s.lower() for s in all_extracted_skills])
-    market_skills_unique = set([s.lower() for s in market_demand_skills])
+    # ── 5. Print skill gap recommendations ───────────────────────────
+    print("\n" + "=" * 65)
+    print("    SKILL GAP RECOMMENDATIONS  (from cosine analysis)")
+    print("=" * 65)
 
-    # Skills in market but NOT in curriculum
-    skill_gap = market_skills_unique - taught_skills_unique
+    # cosine_relavance already prints gaps; build rec_df here if needed
+    rec_df = cosine_relavance(df, market_df)  # re-use or store return value earlier
 
-    print("\n--- INSIGHTS & RECOMMENDATIONS ---")
-    print(f"Identified Skill Gaps: {list(skill_gap)}")
-    if skill_gap:
-        print(f"Recommendation: Consider adding modules for {', '.join(list(skill_gap)[:3])} to improve alignment")
+    for _, row in rec_df.iterrows():
+        print(f"\n  {row['University']}  —  Relevance: {row['Relevance_Score_%']}%"
+              f"  |  Gap skills: {row['Gap_Skills_Count']}")
+        for skill, score in zip(row["Recommended_Skills"].split(", "),
+                                row["Coverage_Scores_%"].split(", ")):
+            print(f"    • {skill:<40}  (best match: {score}%)")
+
+    print("\n" + "=" * 65)
 
 def main():
     df = pd.read_csv("Data.csv")
@@ -705,9 +738,8 @@ def main():
 
     #test_Sbert(df)
     #jaccard_relavance(df,market_data)
-    cosine_relavance(df,market_data_cos)
-    #uni_score = Similarity_Measures(mock_data)
-    #plot_charts(uni_score, df, mock_data)
+    #cosine_relavance(df,market_data_cos)
+    plot_charts(df, market_data, market_data_cos)
 
 if __name__ == '__main__':
     main()
