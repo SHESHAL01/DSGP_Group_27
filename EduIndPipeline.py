@@ -669,61 +669,7 @@ def cosine_relavance(df, market_df):
             print(f"    • {skill:<40}  (best match: {score}%)")
     print("\n" + "=" * 65)
 
-def Similarity_Measures(market_demand_skills):
-    # Initialize Model
-    model = SentenceTransformer('all-MiniLM-L6-v2')
 
-    # Market Demand Data
-    market_text = ", ".join(market_demand_skills)
-    print(market_text)
-    market_embeddings = model.encode(market_text, convert_to_tensor=True)
-
-    # Similarity Model Test_Data
-    df_features = pd.read_csv('Output.csv')
-
-    def get_scores(course_skills):
-        if not course_skills:
-            return pd.Series([0.0, 0.0, 0.0, 0.0])
-
-        course_text = ", ".join(course_skills)
-
-        # --- A. Cosine Similarity (SBERT) ---
-        course_emb = model.encode(course_text, convert_to_tensor=True)
-        cos_score = util.cos_sim(course_emb, market_embeddings).item()
-
-        # --- B. Jaccard Similarity ---
-        set_c = set([s.lower() for s in course_skills])
-        set_m = set([s.lower() for s in market_demand_skills])
-        intersection = len(set_c.intersection(set_m))
-        union = len(set_c.union(set_m))
-        jaccard_score = (intersection / union if union > 0 else 0.0) * 100
-
-        # --- C. Levenshtein / Fuzzy Match --
-        fuzzy_score = fuzz.token_sort_ratio(course_text, market_text) / 100.0
-
-        return pd.Series([cos_score, jaccard_score, fuzzy_score])
-
-    # APPLYING TO DATASET
-    print("COMPARING SKILLS USING MULTIPLE MODELS...")
-
-    # Create columns for each method
-    method_cols = ['Cosine_Score', 'Jaccard_Score', 'Fuzzy_Score']
-    df_features[method_cols] = df_features['Skills'].apply(get_scores)
-
-    # CALCULATING UNIVERSITY RELEVANCE SCORES
-    uni_relevance_report = df_features.groupby('University')[method_cols].mean() * 100
-
-    uni_relevance_report.columns = [
-        'Cosine_Relevance_%',
-        'Jaccard_Relevance_%',
-        'Fuzzy_Relevance_%'
-    ]
-
-    df_uni_score = uni_relevance_report.reset_index()
-
-    print("\n--- FINAL CURRICULUM RELEVANCE SCORES PER UNIVERSITY ---")
-    print(df_uni_score.to_markdown(index=False))
-    return df_uni_score
 
 
 def plot_charts(df_uni_score, df_features, market_demand_skills):
