@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+from fuzzywuzzy import fuzz
 import matplotlib.pyplot as plt
 import logging
 from sklearn.model_selection import train_test_split
@@ -323,7 +324,7 @@ def test_Sbert(df):
     # ─────────────────────────────────────────────
     optimizer = AdamW(
         list(model.parameters()) + list(loss_fn.parameters()),
-        lr=1e-5,
+        lr=3e-5,
         weight_decay=0.01
     )
 
@@ -335,7 +336,7 @@ def test_Sbert(df):
     #     • Optimal       → both decrease and level together
     #     • Overfitting   → train↓ but val turns back up
     # ─────────────────────────────────────────────
-    MAX_EPOCHS = 15
+    MAX_EPOCHS = 10
     train_losses = []
     val_losses = []
     best_val_loss = float('inf')
@@ -476,7 +477,7 @@ def jaccard_similarity(set_a: set, set_b: set) -> float:
     """Jaccard = |A ∩ B| / |A ∪ B|"""
     if not set_a or not set_b:
         return 0.0
-    return round(len(set_a & set_b) / len(set_a | set_b), 4)
+    return round(len(set_a & set_b) / len(set_b), 4)
 
 def jaccard_relavance(df, market_skills):
 
@@ -497,6 +498,14 @@ def jaccard_relavance(df, market_skills):
 
     print(f"Universities found: {list(university_skills.keys())}\n")
 
+    # Tokenize every skill cell → flat list of individual word tokens per row
+    df["Skills"] = df["Skills"].apply(
+        lambda raw: [
+            token
+            for phrase in str(raw).split(",")
+            for token in phrase_to_tokens(phrase.strip())
+        ]
+    )
     # ── Jaccard similarity per university
 
     results = []
@@ -522,7 +531,7 @@ def jaccard_relavance(df, market_skills):
 def cosine_relavance(df, market_df):
 
     # INPUT VARIABLES
-    MATCH_THRESHOLD = 0.6
+    MATCH_THRESHOLD = 0.68
 
     TOP_N_GAPS = 5  # how many gap skills to surface per university
 
