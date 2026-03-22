@@ -517,19 +517,6 @@ def jaccard_relavance(df, market_skills):
                   .sort_values("Jaccard_Score", ascending=False)
                   .reset_index(drop=True))
 
-    # Print results
-
-    print("=" * 60)
-    print("  UNIVERSITY CURRICULUM RELEVANCE  (Jaccard Similarity)")
-    print("=" * 60)
-
-    for _, row in results_df.iterrows():
-        print(f"\n  University         : {row['University']}")
-        print(f"  Jaccard Score      : {row['Jaccard_Score']:.4f}  ({row['Relevance_%']})")
-        print(f"  Curriculum tokens  : {row['Curriculum_Tokens']}")
-        print(f"  Matched with market: {row['Common_Tokens']}")
-        print(f"  Matched skills     : {row['Matched_Skills'][:120]}")
-
     return results_df
 
 def cosine_relavance(df, market_df):
@@ -650,25 +637,6 @@ def cosine_relavance(df, market_df):
         .reset_index(drop=True)
     )
     rec_df.index += 1
-
-    # ── Console output
-    print("\n" + "=" * 65)
-    print("    CURRICULUM RELEVANCE SCORES  (ranked)")
-    print("=" * 65)
-    print(score_df.to_string())
-    print("=" * 65)
-
-    print("\n" + "=" * 65)
-    print("    SKILL GAP RECOMMENDATIONS  (per university)")
-    print("=" * 65)
-    for _, row in rec_df.iterrows():
-        print(f"\n  {row['University']}  —  Relevance: {row['Relevance_Score_%']}%"
-              f"  |  Gap skills: {row['Gap_Skills_Count']}")
-        skills = row['Recommended_Skills'].split(', ')
-        scores = row['Coverage_Scores_%'].split(', ')
-        for skill, score in zip(skills, scores):
-            print(f"    • {skill:<40}  (best match: {score}%)")
-    print("\n" + "=" * 65)
 
     return score_df
 
