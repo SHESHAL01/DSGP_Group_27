@@ -336,7 +336,7 @@ def test_Sbert(df):
     #     • Optimal       → both decrease and level together
     #     • Overfitting   → train↓ but val turns back up
     # ─────────────────────────────────────────────
-    MAX_EPOCHS = 10
+    MAX_EPOCHS = 6
     train_losses = []
     val_losses = []
     best_val_loss = float('inf')
@@ -536,7 +536,7 @@ def jaccard_relavance(df, market_skills):
 def cosine_relavance(df, market_df):
 
     # INPUT VARIABLES
-    MATCH_THRESHOLD = 0.5
+    MATCH_THRESHOLD = 0.6
 
     TOP_N_GAPS = 5  # how many gap skills to surface per university
 
@@ -711,35 +711,18 @@ def plot_charts(df, market_skills,market_df ):
     plt.savefig("curriculum_relevance.png", dpi=150)
     plt.show()
 
-    # ── 5. Print skill gap recommendations ───────────────────────────
-    print("\n" + "=" * 65)
-    print("    SKILL GAP RECOMMENDATIONS  (from cosine analysis)")
-    print("=" * 65)
-
-    # cosine_relavance already prints gaps; build rec_df here if needed
-    rec_df = cosine_relavance(df, market_df)  # re-use or store return value earlier
-
-    for _, row in rec_df.iterrows():
-        print(f"\n  {row['University']}  —  Relevance: {row['Relevance_Score_%']}%"
-              f"  |  Gap skills: {row['Gap_Skills_Count']}")
-        for skill, score in zip(row["Recommended_Skills"].split(", "),
-                                row["Coverage_Scores_%"].split(", ")):
-            print(f"    • {skill:<40}  (best match: {score}%)")
-
-    print("\n" + "=" * 65)
-
 def main():
     df = pd.read_csv("Data.csv")
     market_data_cos = pd.read_csv("extracted_skills.csv")
 
     df["Skills"] = df["Skills"].apply(clean_skills_cell)
     #DataAnalysis(df)
-    market_data = market_demand_skills()
+    #market_data = market_demand_skills()
 
     #test_Sbert(df)
     #jaccard_relavance(df,market_data)
     #cosine_relavance(df,market_data_cos)
-    plot_charts(df, market_data, market_data_cos)
+    #plot_charts(df, market_data, market_data_cos)
 
 if __name__ == '__main__':
     main()
