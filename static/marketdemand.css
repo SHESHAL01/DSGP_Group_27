@@ -5,6 +5,9 @@
     --text-primary: #ffffff;
     --text-secondary: #a1a1a6;
     --glass-border: rgba(255, 255, 255, 0.1);
+    --error-color: #ff6b6b;
+    --success-color: #51cf66;
+    --warning-color: #ffd93d;
 }
 
 * {
@@ -45,6 +48,7 @@ body {
     color: var(--text-secondary);
     text-decoration: none;
     font-size: 14px;
+    transition: color 0.3s ease;
 }
 
 .navbar a:hover {
@@ -117,6 +121,8 @@ body {
     font-size: 16px;
     text-align: center;
     text-align-last: center;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
 }
 
 .control-content select option {
@@ -128,36 +134,22 @@ body {
     border-color: var(--accent-color);
 }
 
-/* PRIMARY BUTTON (WHITE → GRADIENT ON HOVER) */
+/* PRIMARY BUTTON */
 .btn-primary {
     width: 100%;
     padding: 16px;
     border-radius: 14px;
     border: none;
-
-    /* DEFAULT STATE: CLEAN WHITE */
     background: #ffffff;
     color: #000000;
-
     font-size: 16px;
     font-weight: 600;
     cursor: pointer;
-
-    transition:
-        background 0.25s ease,
-        color 0.25s ease,
-        transform 0.15s ease,
-        box-shadow 0.15s ease;
+    transition: all 0.25s ease;
 }
 
 .btn-primary:hover {
-    /* HOVER STATE: SITE GRADIENT */
-    background: radial-gradient(
-        circle at 50% -20%,
-        rgba(29, 78, 122, 0.95),
-        rgba(0, 0, 0, 0.95)
-    );
-
+    background: radial-gradient(circle at 50% -20%, rgba(29, 78, 122, 0.95), rgba(0, 0, 0, 0.95));
     color: var(--text-primary);
     transform: scale(1.015);
     box-shadow: 0 0 22px rgba(29, 78, 122, 0.6);
@@ -166,6 +158,73 @@ body {
 /* RESULTS SECTION */
 .results-section {
     animation: fadeUp 0.4s ease;
+}
+
+.results-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.results-header h2 {
+    font-size: 32px;
+    margin-bottom: 8px;
+    background: linear-gradient(to bottom, #ffffff, #a1a1a6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.skill-count {
+    color: var(--accent-color);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* SKILL CARDS */
+.skills-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.skill-card {
+    background: var(--card-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 18px;
+    padding: 20px;
+    text-align: center;
+    backdrop-filter: blur(25px);
+    transition: all 0.3s ease;
+    opacity: 0;
+    animation: fadeInUp 0.5s ease forwards;
+    position: relative;
+    overflow: hidden;
+}
+
+.skill-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.5s ease;
+}
+
+.skill-card:hover::before {
+    left: 100%;
+}
+
+.skill-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent-color);
+}
+
+.skill-name {
+    display: block;
+    font-size: 16px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
 }
 
 /* Placeholder */
@@ -183,37 +242,92 @@ body {
     line-height: 1.6;
 }
 
-/* Results title */
-.results-section h2 {
+/* Loading State */
+.loading-message {
     text-align: center;
-    font-size: 32px;
-    margin-bottom: 40px;
-    background: linear-gradient(to bottom, #ffffff, #a1a1a6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    padding: 60px;
 }
 
-/* SKILL CARDS */
-.skills-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 20px;
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid var(--glass-border);
+    border-top-color: var(--accent-color);
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    animation: spin 1s linear infinite;
 }
 
-.skill-card {
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Error & Info Messages */
+.error-message, .info-message {
+    text-align: center;
+    padding: 40px;
     background: var(--card-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: 18px;
-    padding: 22px;
-    text-align: center;
-    font-size: 15px;
-    font-weight: 500;
-    backdrop-filter: blur(25px);
+    border-radius: 24px;
+    margin: 20px 0;
+}
+
+.error-message h3, .info-message h3 {
+    margin-bottom: 16px;
+    font-size: 24px;
+}
+
+.error-message h3 {
+    color: var(--error-color);
+}
+
+.info-message h3 {
+    color: var(--warning-color);
+}
+
+.error-message p, .info-message p {
+    color: var(--text-secondary);
+    margin-bottom: 12px;
+    line-height: 1.6;
+}
+
+.suggestion {
+    margin-top: 24px;
+    padding: 16px;
+    background: rgba(0, 224, 198, 0.1);
+    border-radius: 12px;
+    text-align: left;
+}
+
+.suggestion strong {
+    color: var(--accent-color);
+    display: block;
+    margin-bottom: 8px;
+}
+
+.retry-btn {
+    margin-top: 20px;
+    padding: 10px 24px;
+    background: var(--accent-color);
+    color: #000;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
     transition: transform 0.2s ease;
 }
 
-.skill-card:hover {
-    transform: translateY(-4px);
+.retry-btn:hover {
+    transform: scale(1.05);
+}
+
+.note {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-top: 30px;
+    font-size: 14px;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
 }
 
 /* FOOTER */
@@ -225,11 +339,7 @@ body {
     border-top: 1px solid var(--glass-border);
 }
 
-/* UTIL */
-.hidden {
-    display: none;
-}
-
+/* Animations */
 @keyframes fadeUp {
     from {
         opacity: 0;
@@ -238,5 +348,75 @@ body {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .header {
+        padding: 20px 20px;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .navbar ul {
+        gap: 20px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .hero h1 {
+        font-size: 36px;
+    }
+    
+    .hero p {
+        font-size: 16px;
+    }
+    
+    .container {
+        padding: 40px 20px;
+    }
+    
+    .control-content {
+        padding: 24px;
+    }
+    
+    .skills-cards {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+    
+    .skill-card {
+        padding: 16px;
+    }
+    
+    .results-header h2 {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero h1 {
+        font-size: 28px;
+    }
+    
+    .control-content select,
+    .btn-primary {
+        font-size: 14px;
+    }
+    
+    .skill-name {
+        font-size: 14px;
     }
 }
