@@ -193,8 +193,6 @@ SKILL_DICTIONARY = [
 ]
 SKILL_SET = set([s.lower() for s in SKILL_DICTIONARY])
 
-# Replace the process_skills function (around line 250-275) with this:
-
 import re
 from difflib import get_close_matches
 from collections import Counter
@@ -208,8 +206,7 @@ def process_skills():
     
     # Create a mapping for common abbreviations and variations
     skill_mappings = {
-        'aw': 'aws',
-        'ku': 'kubernetes',
+        'aw': 'aws','ku': 'kubernetes',
         'dock': 'docker',
         'gi': 'git',
         'gith': 'git',
@@ -715,6 +712,11 @@ def predict():
 
     if not dataset.empty and feature_names and rf_model:
         user_vector = build_user_vector(user_skills, feature_names)
+
+        # ===============================
+        # Employability prediction
+        # ===============================
+
         score, role_probs, alternative_roles = predict_employability(
             rf_model,
             user_vector,
@@ -722,60 +724,142 @@ def predict():
             role_vectors,
             feature_names
         )
-        alternative_roles = [(role, round(prob, 2)) for role, prob in alternative_roles]
+
+        # Round alternative role scores
+        alternative_roles = [
+            (role, round(prob, 2)) for role, prob in alternative_roles
+        ]
+
         score = round(score, 2)
+
+        # ===============================
+        # Status
+        # ===============================
 
         if score > 75:
             status = "Highly Employable"
+
         elif score > 50:
             status = "Moderately Employable"
+
         else:
             status = "Needs Skill Improvement"
 
-        role_vector = role_vectors.get(preferred_role, [0] * len(feature_names))
+        # ===============================
+        # Skill Gap Analysis
+        # ===============================
+
+        role_vector = role_vectors[preferred_role]
+
+        missing_skills = skill_gap_analysis(
+            user_vector,
+            role_vector,
+            feature_names
+        )[:6]
+
+        # keep only skill names
+        missing_skills = [
+            skill.replace("_", " ").title()
+            for skill, _ in missing_skills
+        ]
+        # ===============================
+        # Explainable AI
+        # ===============================
+
+        import math
+
+        important_skills = []
+
+        role_vector = role_vectors[preferred_role]
+
+        for skill in user_skills:
+
+            if skill in feature_names:
+                idx = feature_names.index(skill)
+
+                role_value = role_vector[idx]
+
+                # importance = how important this skill is for the role
+                importance = role_value
+
+                important_skills.append((skill, importance))
+
+        # Sort by importance
+        important_skills = sorted(
+            important_skills,
+            key=lambda x: x[1],
+            reverse=True
+        )[:4]
+        # Log scaling for visualization
+        scaled_skills = []
+
+        if important_skills:
+
+            max_importance = max([imp for _, imp in important_skills])
+
+            for skill, imp in important_skills:
+                scaled = (imp / max_importance) * 85
+
+                scaled_skills.append(
+                    (skill.replace("_", " ").title(), round(scaled, 2))
+                )
+
+        important_skills = scaled_skills
+
+        # ===============================
+        # Career growth simulation
+        # ===============================
+
+        from itertools import combinations
+
         missing_skills_full = skill_gap_analysis(
             user_vector,
             role_vector,
             feature_names
         )
-        missing_skills = missing_skills_full[:6]
-        missing_skills_display = [skill.replace("_", " ").title() for skill, _ in missing_skills]
 
-        important_skills_data = []
-        role_vector_with_names = [(feature_names[i], role_vector[i]) for i in range(len(feature_names))]
-        important_skills_sorted = sorted(
-            [(skill, round(importance * 100, 1)) for skill, importance in role_vector_with_names if importance > 0.3],
-            key=lambda x: x[1],
-            reverse=True
-        )[:8]
-        important_skills_data = important_skills_sorted
+        missing_skills_only = [skill for skill, _ in missing_skills_full]
 
-        session['last_missing_skills'] = [skill for skill, _ in missing_skills_full[:10]]
-        session['last_job_role'] = preferred_role
-        session['last_user_skills'] = skills_text
+        simulations = []
 
-        log_activity(
-            session['user_id'],
-            'prediction',
-            preferred_role,
-            skills_text,
-            score
-        )
+        skill_sets = []
+
+        skill_sets += list(combinations(missing_skills_only, 1))
+        skill_sets += list(combinations(missing_skills_only, 2))
+
+        skill_sets = skill_sets[:4]
+
+        for skill_set in skill_sets:
+            sim_result = simulate_career_growth(
+                rf_model,
+                user_vector,
+                list(skill_set),
+                feature_names,
+                role_vectors
+            )
+
+            new_score = round(sim_result.get(preferred_role, 0) * 100, 2)
+
+            simulations.append({
+                "skills": " + ".join(skill.replace("_", " ").title()for skill in skill_set),
+                "old_score": score,
+                "new_score": new_score
+            })
 
         return render_template(
             "employability.html",
             score=score,
             status=status,
-            important_skills=important_skills_data,
+            important_skills=important_skills,
             alternative_roles=alternative_roles,
-            missing_skills=missing_skills_display,
+            missing_skills=missing_skills,
+            simulations=simulations,
             lower1=score,
             lower2=score,
             top_models=top_models,
             precision=rf_precision,
             recall=rf_recall,
-            f1=rf_f1,
-            user={'name': session['user_name']}
+            f1=rf_f1
         )
     else:
         flash('Models not loaded properly. Please check system configuration.', 'error')
