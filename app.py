@@ -710,6 +710,10 @@ def predict():
     skills_text = request.form["skills"]
     user_skills = [s.strip() for s in skills_text.split(",")]
 
+    # Store these values in session for later use
+    session['last_preferred_role'] = preferred_role
+    session['last_skills_text'] = skills_text
+
     if not dataset.empty and feature_names and rf_model:
         user_vector = build_user_vector(user_skills, feature_names)
 
@@ -751,37 +755,34 @@ def predict():
 
         role_vector = role_vectors[preferred_role]
 
-        missing_skills = skill_gap_analysis(
+        missing_skills_full = skill_gap_analysis(
             user_vector,
             role_vector,
             feature_names
-        )[:6]
+        )
+        
+        missing_skills = missing_skills_full[:6]
 
-        # keep only skill names
-        missing_skills = [
+        # Store missing skills in session for recommendation page
+        session['last_missing_skills'] = [skill for skill, _ in missing_skills_full[:10]]
+
+        # keep only skill names for display
+        missing_skills_display = [
             skill.replace("_", " ").title()
             for skill, _ in missing_skills
         ]
+        
         # ===============================
         # Explainable AI
         # ===============================
 
-        import math
-
         important_skills = []
 
-        role_vector = role_vectors[preferred_role]
-
         for skill in user_skills:
-
             if skill in feature_names:
                 idx = feature_names.index(skill)
-
                 role_value = role_vector[idx]
-
-                # importance = how important this skill is for the role
                 importance = role_value
-
                 important_skills.append((skill, importance))
 
         # Sort by importance
@@ -790,16 +791,15 @@ def predict():
             key=lambda x: x[1],
             reverse=True
         )[:4]
+        
         # Log scaling for visualization
         scaled_skills = []
 
         if important_skills:
-
             max_importance = max([imp for _, imp in important_skills])
 
             for skill, imp in important_skills:
                 scaled = (imp / max_importance) * 85
-
                 scaled_skills.append(
                     (skill.replace("_", " ").title(), round(scaled, 2))
                 )
@@ -811,12 +811,6 @@ def predict():
         # ===============================
 
         from itertools import combinations
-
-        missing_skills_full = skill_gap_analysis(
-            user_vector,
-            role_vector,
-            feature_names
-        )
 
         missing_skills_only = [skill for skill, _ in missing_skills_full]
 
@@ -852,14 +846,16 @@ def predict():
             status=status,
             important_skills=important_skills,
             alternative_roles=alternative_roles,
-            missing_skills=missing_skills,
+            missing_skills=missing_skills_display,
             simulations=simulations,
             lower1=score,
             lower2=score,
             top_models=top_models,
             precision=rf_precision,
             recall=rf_recall,
-            f1=rf_f1
+            f1=rf_f1,
+            preferred_role=preferred_role,  # Pass to template
+            skills_text=skills_text  # Pass to template
         )
     else:
         flash('Models not loaded properly. Please check system configuration.', 'error')
@@ -871,53 +867,64 @@ def recommendation_page():
         flash('Please log in to access recommendations', 'error')
         return redirect(url_for('login'))
 
+    # Try to get parameters from URL first, then fall back to session
     preferred_job = request.args.get("job_role")
-    user_skills_input = request.args.get("skills", "")
-
-    if not preferred_job or not user_skills_input:
-        preferred_job = session.get('last_job_role', '')
-        user_skills_input = session.get('last_user_skills', '')
-
-    if not preferred_job or not user_skills_input:
-        return render_template(
-            "recommendation.html",
-            job="",
-            user_skills="",
-            mismatches=[],
-            recommendations={},
-            score=0,
-            metrics={"Precision": rf_precision, "Recall": rf_recall, "F1": rf_f1},
-            user={'name': session['user_name']}
-        )
-
+    user_skills_input = request.args.get("skills")
+    
+    # If no parameters in URL, use session values
+    if not preferred_job:
+        preferred_job = session.get('last_preferred_role', '')
+    if not user_skills_input:
+        user_skills_input = session.get('last_skills_text', '')
+    
+    # Also get missing skills from session if available
     missing_skills = session.get('last_missing_skills', [])
+    
+    # Debug logging
+    logger.info(f"Recommendation request - Job: {preferred_job}, Skills: {user_skills_input}")
 
+    if not preferred_job or not user_skills_input:
+        flash('Please enter a job role and skills on the Employability page first', 'warning')
+        return redirect(url_for('employability_page'))
+
+    # Process skills
+    user_skills = [s.strip().lower() for s in user_skills_input.split(",")]
+    
+    # Build user vector and get missing skills if not already in session
     if not missing_skills and not dataset.empty and feature_names:
-        user_skills = [s.strip().lower() for s in user_skills_input.split(",")]
         user_vector = build_user_vector(user_skills, feature_names)
         role_vector = role_vectors.get(preferred_job, [0] * len(feature_names))
-
+        
         missing_skills_full = skill_gap_analysis(
             user_vector,
             role_vector,
             feature_names
         )
         missing_skills = [skill for skill, _ in missing_skills_full[:10]]
-
+        
+        # Store for future use
+        session['last_missing_skills'] = missing_skills
+    
+    # Calculate match percentage
     match_percent = 0
     if missing_skills and not dataset.empty and feature_names:
         role_vector = role_vectors.get(preferred_job, [0] * len(feature_names))
         total_relevant = sum(1 for v in role_vector if v > 0.3)
         match_percent = int((total_relevant - len(missing_skills)) / total_relevant * 100) if total_relevant > 0 else 0
 
+    # Get course recommendations
     recommendations = get_course_recommendations(missing_skills, preferred_job)
+    
+    # Format mismatches for display
     mismatches_display = [skill.replace('_', ' ').title() for skill in missing_skills]
 
+    # Log the activity
     log_activity(
         session['user_id'],
         'recommendation',
         preferred_job,
-        user_skills_input
+        user_skills_input,
+        match_percent
     )
 
     return render_template(

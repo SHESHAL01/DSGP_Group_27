@@ -39,25 +39,23 @@
 <div class="input-section">
 
 <form action="/predict" method="POST">
+    <div class="input-group">
+        <label>Preferred Job Role</label>
+        <select name="preferred_role">
+            <option>Data Scientist</option>
+            <option>Data Analyst</option>
+            <option>Software Engineer</option>
+            <option>Machine Learning Engineer</option>
+            <option>Cloud Engineer</option>
+        </select>
+    </div>
 
-<div class="input-group">
-<label>Preferred Job Role</label>
-<select name="preferred_role">
-<option>Data Scientist</option>
-<option>Data Analyst</option>
-<option>Software Engineer</option>
-<option>Machine Learning Engineer</option>
-<option>Cloud Engineer</option>
-</select>
-</div>
+    <div class="input-group">
+        <label>Enter Your Skills</label>
+        <textarea name="skills" placeholder="Example: Python, SQL, Machine Learning, Communication"></textarea>
+    </div>
 
-<div class="input-group">
-<label>Enter Your Skills</label>
-<textarea name="skills" placeholder="Example: Python, SQL, Machine Learning, Communication"></textarea>
-</div>
-
-<button class="btn-primary" type="submit">Get Prediction</button>
-
+    <button class="btn-primary" type="submit">Get Prediction</button>
 </form>
 
 </div>
@@ -219,48 +217,79 @@ Go to Recommendation Engine
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
-const bars = document.querySelectorAll('.perf-bar');
-let maxPercentage = 0;
-let highestBar = null;
+    const bars = document.querySelectorAll('.perf-bar');
+    let maxPercentage = 0;
+    let highestBar = null;
 
-bars.forEach(bar => {
-const heightStyle = bar.style.height;
-const percentage = parseFloat(heightStyle);
+    bars.forEach(bar => {
+        const heightStyle = bar.style.height;
+        const percentage = parseFloat(heightStyle);
 
-if (percentage > maxPercentage) {
-maxPercentage = percentage;
-highestBar = bar;
-}
-});
-
-if (highestBar) {
-highestBar.classList.add('highest');
-}
-
-document.querySelectorAll('.bar-full').forEach(el => {
-el.style.width = el.dataset.full + '%';
-});
-
-document.querySelectorAll('.bar-lower').forEach(el => {
-el.style.width = el.dataset.lower + '%';
-});
-
-// Add event listener for recommendation button
-const goBtn = document.getElementById('go_to_recommendation');
-const jobSelect = document.querySelector('select[name="preferred_role"]');
-const skillsInput = document.querySelector('textarea[name="skills"]');
-
-if (goBtn && jobSelect && skillsInput) {
-    goBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        const job_role = jobSelect.value;
-        const skills = skillsInput.value;
-        window.location.href = `/recommend?job_role=${encodeURIComponent(job_role)}&skills=${encodeURIComponent(skills)}`;
+        if (percentage > maxPercentage) {
+            maxPercentage = percentage;
+            highestBar = bar;
+        }
     });
-}
+
+    if (highestBar) {
+        highestBar.classList.add('highest');
+    }
+
+    document.querySelectorAll('.bar-full').forEach(el => {
+        el.style.width = el.dataset.full + '%';
+    });
+
+    document.querySelectorAll('.bar-lower').forEach(el => {
+        el.style.width = el.dataset.lower + '%';
+    });
+
+    // Get the values that were submitted from the server-side (passed from Flask)
+    const currentJobRole = "{{ preferred_role }}";
+    const currentSkills = "{{ skills_text }}";
+    
+    // If we have values from the prediction, populate the form fields
+    if (currentJobRole && currentJobRole !== "") {
+        const jobSelect = document.querySelector('select[name="preferred_role"]');
+        if (jobSelect) {
+            jobSelect.value = currentJobRole;
+        }
+    }
+    
+    if (currentSkills && currentSkills !== "") {
+        const skillsTextarea = document.querySelector('textarea[name="skills"]');
+        if (skillsTextarea) {
+            skillsTextarea.value = currentSkills;
+        }
+    }
+
+    // Handle recommendation button click
+    const goBtn = document.getElementById('go_to_recommendation');
+    
+    if (goBtn) {
+        goBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Always use the current values from the form (which now persist)
+            const jobSelect = document.querySelector('select[name="preferred_role"]');
+            const skillsInput = document.querySelector('textarea[name="skills"]');
+            
+            const job_role = jobSelect ? jobSelect.value : '';
+            const skills = skillsInput ? skillsInput.value : '';
+            
+            console.log('Going to recommendations with:', {job_role, skills});
+            
+            if (!job_role || !skills) {
+                alert('Please fill in both job role and skills before getting recommendations.');
+                return;
+            }
+            
+            window.location.href = `/recommend?job_role=${encodeURIComponent(job_role)}&skills=${encodeURIComponent(skills)}`;
+        });
+    } else {
+        console.error('Recommendation button not found!');
+    }
 
 });
 </script>
-
 </body>
 </html>
