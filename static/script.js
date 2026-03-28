@@ -258,32 +258,103 @@ function renderInsightCards(insights) {
     if (!grid || !insights.length) return;
     grid.innerHTML = '';
 
+    // ── Build university filter bar first ─────────────────────────────
+    buildUniFilter(insights);
+
+    // ── Render cards ──────────────────────────────────────────────────
     insights.forEach((insight, i) => {
         const type    = insight.type || 'recommendation';
         const icon    = INSIGHT_ICONS[type]  || INSIGHT_ICONS.recommendation;
         const badge   = BADGE_LABELS[type]   || 'Insight';
         const cssType = type.replace('_', '-');
+        const uni     = insight.university   || 'all';
 
         const card = document.createElement('div');
         card.className = `insight-card ${cssType}`;
-        card.style.animationDelay = `${(i + 1) * 0.1}s`;
+        card.dataset.university = uni;
+        card.style.animationDelay = `${(i + 1) * 0.08}s`;
+
+        // Skill tags — shown only when the array is non-empty
+        const skillsHtml = (insight.skills && insight.skills.length)
+            ? `<div class="skill-tags">
+                   ${insight.skills.map(s =>
+                       `<span class="skill-tag skill-tag-${cssType}">${escapeHtml(s)}</span>`
+                   ).join('')}
+               </div>`
+            : '';
+
+        // Alignment score footer bar — shown only when score is present
+        const scoreBadge = (insight.score !== undefined && insight.score !== null)
+            ? `<div class="insight-score">
+                   <span class="insight-score-label">Alignment Score</span>
+                   <span class="insight-score-value">${insight.score}%</span>
+               </div>`
+            : '';
+
+        // University label — shown on per-university cards only
+        const uniLabel = (uni !== 'all')
+            ? `<span class="uni-label">${escapeHtml(uni)}</span>`
+            : '';
 
         card.innerHTML = `
             <div class="insight-header">
                 <div class="insight-icon">${icon}</div>
                 <span class="insight-badge ${cssType}-badge">${badge}</span>
+                ${uniLabel}
             </div>
             <h3 class="insight-title">${escapeHtml(insight.title)}</h3>
             <p class="insight-description">${escapeHtml(insight.description)}</p>
+            ${skillsHtml}
+            ${scoreBadge}
         `;
 
-        // Click feedback via CSS class only — no inline styles
         card.addEventListener('click', function () {
             this.classList.add('card-clicked');
             setTimeout(() => this.classList.remove('card-clicked'), 150);
         });
 
         grid.appendChild(card);
+    });
+}
+
+
+// ─── University Filter Bar ────────────────────────────────────────
+
+function buildUniFilter(insights) {
+    const container = document.getElementById('uni-filter');
+    if (!container) return;
+
+    // Collect unique universities in appearance order; always prepend "all"
+    const unis = ['all'];
+    insights.forEach(ins => {
+        if (ins.university && ins.university !== 'all' && !unis.includes(ins.university)) {
+            unis.push(ins.university);
+        }
+    });
+
+    container.innerHTML = unis.map(u => `
+        <button class="filter-btn ${u === 'all' ? 'active' : ''}"
+                data-filter="${escapeHtml(u)}">
+            ${u === 'all' ? 'All Universities' : escapeHtml(u)}
+        </button>
+    `).join('');
+
+    // Click handler — show/hide cards by university
+    container.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function () {
+            container.querySelectorAll('.filter-btn')
+                     .forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            const selected = this.dataset.filter;
+            document.querySelectorAll('.insight-card').forEach(card => {
+                const cardUni = card.dataset.university;
+                const visible = selected === 'all'
+                    || cardUni === selected
+                    || cardUni === 'all';
+                card.style.display = visible ? '' : 'none';
+            });
+        });
     });
 }
 
@@ -400,20 +471,56 @@ function escapeHtml(str) {
 /** Fallback shown when /api/analysis is unreachable */
 function getDefaultData() {
     return {
-        current_university: { name: 'University A (Current)', score: 72 },
-        market_benchmark:   85,
+        current_university: { name: 'University A (Current)', score: 72, jaccard: 9.5, cosine: 72 },
+        market_benchmark:   70,
+        cosine_available:   false,
         university_scores: [
-            { university: 'University A (Current)', average: 72 },
-            { university: 'Market Benchmark',        average: 85 },
-            { university: 'Competitor B',            average: 68 },
-            { university: 'Competitor C',            average: 60 },
+            { university: 'University A', jaccard: 9.5,  cosine: null },
+            { university: 'University B', jaccard: 7.2,  cosine: null },
+            { university: 'University C', jaccard: 9.8,  cosine: null },
+            { university: 'University D', jaccard: 6.1,  cosine: null },
         ],
         insights: [
-            { type: 'skill_gap',      title: 'Missing Modern Framework Coverage',  description: 'Popular frameworks like React, Angular, and Vue.js are highly demanded in the job market but absent from the current curriculum.' },
-            { type: 'skill_gap',      title: 'Limited Cloud Technology Training',  description: 'Cloud computing skills (AWS, Azure, Google Cloud) are increasingly important but underrepresented in the curriculum.' },
-            { type: 'strength',       title: 'Strong Foundational Programming',    description: 'Core programming languages like Python and JavaScript are well-covered and align with market demand.' },
-            { type: 'recommendation', title: 'Add Modern Web Development Module',  description: 'Include a dedicated module covering React, Node.js, and modern web development frameworks to improve alignment by ~15%.' },
-            { type: 'recommendation', title: 'Update Server-Side Technologies',    description: 'Consider supplementing older content with modern backend technologies like Node.js, Django/Flask, or containerisation tools.' },
+            {
+                type: 'skill_gap',
+                university: 'University A',
+                title: 'University A \u2014 Missing Skills',
+                description: 'University A has a curriculum alignment score of 9.5%. The following market-demanded skills are absent or under-covered.',
+                skills: ['React', 'Docker', 'Kubernetes', 'AWS', 'CI/CD'],
+                score: 9.5,
+            },
+            {
+                type: 'skill_gap',
+                university: 'University B',
+                title: 'University B \u2014 Missing Skills',
+                description: 'University B has a curriculum alignment score of 7.2%. The following skills are underrepresented.',
+                skills: ['Angular', 'Azure', 'Terraform', 'GraphQL'],
+                score: 7.2,
+            },
+            {
+                type: 'strength',
+                university: 'University C',
+                title: 'University C \u2014 Core Strengths',
+                description: 'University C demonstrates solid curriculum coverage of the following industry-relevant skills (alignment score: 9.8%).',
+                skills: ['Python', 'SQL', 'Java', 'Git', 'Agile'],
+                score: 9.8,
+            },
+            {
+                type: 'recommendation',
+                university: 'all',
+                title: 'Priority Skills to Add Across All Curricula',
+                description: 'Average alignment across all universities is 8.2%. These skills appear as gaps in the majority of curricula.',
+                skills: ['Docker', 'React', 'AWS', 'Kubernetes', 'CI/CD'],
+                score: 8.2,
+            },
+            {
+                type: 'recommendation',
+                university: 'University D',
+                title: 'University D \u2014 Recommended Modules',
+                description: 'Introducing dedicated modules for the skills listed below could improve University D\'s alignment score by an estimated 10 percentage points.',
+                skills: ['Node.js', 'MongoDB', 'TypeScript', 'Flutter'],
+                score: 6.1,
+            },
         ]
     };
 }

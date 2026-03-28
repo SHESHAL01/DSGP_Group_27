@@ -35,15 +35,19 @@ try:
         DataAnalysis,
         test_Sbert
     )
+
     logger.info("Successfully imported EduIndPipeline modules")
 except ImportError as e:
     logger.error(f"Error importing from EduIndPipeline: {e}")
     logger.error(traceback.format_exc())
+
+
     # Define fallback functions
-    def clean_skills_cell(cell): 
+    def clean_skills_cell(cell):
         return cell if pd.notna(cell) else ""
-    
-    def market_demand_skills(): 
+
+
+    def market_demand_skills():
         try:
             market_df = pd.read_csv("extracted_skills.csv")
             market_skills = set()
@@ -56,16 +60,20 @@ except ImportError as e:
             return market_skills
         except:
             return set()
-    
+
+
     def jaccard_relavance(df, market_skills):
         return pd.DataFrame({"University": ["No Data"], "Jaccard_Score": [0.0], "Relevance_%": ["0.00%"]})
-    
+
+
     def cosine_relavance(df, market_df):
         return pd.DataFrame({"University": ["No Data"], "Relevance_Score_%": [0.0]})
-    
+
+
     def DataAnalysis(df):
         print("Data analysis function not available")
-    
+
+
     def test_Sbert(df):
         print("SBERT training function not available")
 
@@ -197,16 +205,17 @@ import re
 from difflib import get_close_matches
 from collections import Counter
 
+
 def process_skills():
     if skills_df.empty:
         return {}
-    
+
     # Create a set of normalized skill names for matching
     skill_set_lower = set([s.lower() for s in SKILL_SET])
-    
+
     # Create a mapping for common abbreviations and variations
     skill_mappings = {
-        'aw': 'aws','ku': 'kubernetes',
+        'aw': 'aws', 'ku': 'kubernetes',
         'dock': 'docker',
         'gi': 'git',
         'gith': 'git',
@@ -277,42 +286,42 @@ def process_skills():
         'ui': 'ui design',
         'ux': 'ux design'
     }
-    
+
     def normalize_skill(skill):
         skill = skill.strip().lower()
-        
+
         # Remove common suffixes and clean up
         skill = re.sub(r'[^a-z0-9\s]', '', skill)
-        
+
         # Check direct mapping
         if skill in skill_mappings:
             return skill_mappings[skill]
-        
+
         # Check for partial matches in SKILL_SET
         for key, value in skill_mappings.items():
             if skill in key or key in skill:
                 return value
-        
+
         # Try fuzzy matching for close matches
         close_matches = get_close_matches(skill, skill_set_lower, n=1, cutoff=0.6)
         if close_matches:
             return close_matches[0]
-        
+
         # Check if skill is in SKILL_SET
         if skill in skill_set_lower:
             return skill
-        
+
         # Check for skill being part of a longer skill name
         for std_skill in skill_set_lower:
             if skill in std_skill or std_skill in skill:
                 return std_skill
-        
+
         return skill  # Return original if no match found
-    
+
     role_skills = {}
     for _, row in skills_df.iterrows():
         role = str(row.get("role", "")).strip().lower()
-        
+
         # Clean role name - extract main role
         if '(' in role:
             role = role.split('(')[0].strip()
@@ -320,7 +329,7 @@ def process_skills():
             role = role.split(',')[0].strip()
         if '-' in role:
             role = role.split('-')[0].strip()
-        
+
         # Map common role variations
         role_mappings = {
             'software engineer': 'software engineer',
@@ -346,9 +355,9 @@ def process_skills():
             'database administrator': 'database administrator',
             'dba': 'database administrator'
         }
-        
+
         role = role_mappings.get(role, role)
-        
+
         try:
             skills_list = ast.literal_eval(row.get("extracted_skills", "[]"))
         except:
@@ -364,7 +373,7 @@ def process_skills():
 
         if role not in role_skills:
             role_skills[role] = []
-        
+
         role_skills[role].extend(cleaned_skills)
 
     # Aggregate and get top skills for each role
@@ -374,8 +383,9 @@ def process_skills():
             counter = Counter(skills)
             # Remove duplicates and get top 10
             top_skills[role] = [skill for skill, _ in counter.most_common(10)]
-    
+
     return top_skills
+
 
 TOP_SKILLS = process_skills()
 
@@ -446,6 +456,7 @@ if not dataset.empty:
     except Exception as e:
         logger.error(f"Error computing role vectors: {e}")
 
+
 # ===============================
 # Database functions
 # ===============================
@@ -481,7 +492,9 @@ def init_db():
     except Exception as e:
         logger.error(f"Error initializing database: {e}")
 
+
 init_db()
+
 
 def log_activity(user_id, activity_type, job_role=None, skills=None, score=None):
     try:
@@ -494,6 +507,7 @@ def log_activity(user_id, activity_type, job_role=None, skills=None, score=None)
         conn.close()
     except Exception as e:
         logger.error(f"Error logging activity: {e}")
+
 
 def get_user_activities(user_id, limit=50):
     try:
@@ -510,6 +524,7 @@ def get_user_activities(user_id, limit=50):
     except Exception as e:
         logger.error(f"Error fetching activities: {e}")
         return []
+
 
 def parse_datetime_safe(dt_value):
     """Safely parse datetime from string or return as is"""
@@ -530,6 +545,7 @@ def parse_datetime_safe(dt_value):
                     return datetime.now()
     return datetime.now()
 
+
 # ===============================
 # AUTHENTICATION ROUTES
 # ===============================
@@ -539,6 +555,7 @@ def root():
     if 'user_id' in session:
         return redirect(url_for('skillsync_home'))
     return redirect(url_for('login'))
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -557,7 +574,7 @@ def login():
             session['user_email'] = user[2]
 
             c.execute('UPDATE users SET last_login = ? WHERE id = ?',
-                     (datetime.now(), user[0]))
+                      (datetime.now(), user[0]))
             c.execute('''INSERT INTO user_activities (user_id, activity_type, created_at)
                          VALUES (?, ?, ?)''', (user[0], 'login', datetime.now()))
 
@@ -571,6 +588,7 @@ def login():
             flash('Invalid email or password', 'error')
 
     return render_template('login.html')
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -587,7 +605,7 @@ def register():
         try:
             c.execute('''INSERT INTO users (name, email, password, created_at)
                          VALUES (?, ?, ?, ?)''',
-                     (name, email, hashed_password, datetime.now()))
+                      (name, email, hashed_password, datetime.now()))
             user_id = c.lastrowid
 
             c.execute('''INSERT INTO user_activities (user_id, activity_type, created_at)
@@ -605,6 +623,7 @@ def register():
 
     return render_template('register.html')
 
+
 @app.route('/logout')
 def logout():
     if 'user_id' in session:
@@ -613,6 +632,7 @@ def logout():
     session.clear()
     flash('You have been logged out.', 'success')
     return redirect(url_for('login'))
+
 
 @app.route('/profile')
 def profile():
@@ -625,7 +645,7 @@ def profile():
         c = conn.cursor()
 
         c.execute('SELECT name, email, created_at, last_login FROM users WHERE id = ?',
-                 (session['user_id'],))
+                  (session['user_id'],))
         user = c.fetchone()
 
         if not user:
@@ -662,6 +682,7 @@ def profile():
         flash('An error occurred while loading your profile', 'error')
         return redirect(url_for('skillsync_home'))
 
+
 # ===============================
 # MAIN ROUTES
 # ===============================
@@ -675,6 +696,7 @@ def skillsync_home():
         "skillsync.html",
         user={'name': session['user_name']}
     )
+
 
 @app.route("/employability")
 def employability_page():
@@ -700,6 +722,7 @@ def employability_page():
         f1=rf_f1,
         user={'name': session['user_name']}
     )
+
 
 @app.route("/predict", methods=["POST"])
 def predict():
@@ -760,7 +783,7 @@ def predict():
             role_vector,
             feature_names
         )
-        
+
         missing_skills = missing_skills_full[:6]
 
         # Store missing skills in session for recommendation page
@@ -771,7 +794,7 @@ def predict():
             skill.replace("_", " ").title()
             for skill, _ in missing_skills
         ]
-        
+
         # ===============================
         # Explainable AI
         # ===============================
@@ -791,7 +814,7 @@ def predict():
             key=lambda x: x[1],
             reverse=True
         )[:4]
-        
+
         # Log scaling for visualization
         scaled_skills = []
 
@@ -835,7 +858,7 @@ def predict():
             new_score = round(sim_result.get(preferred_role, 0) * 100, 2)
 
             simulations.append({
-                "skills": " + ".join(skill.replace("_", " ").title()for skill in skill_set),
+                "skills": " + ".join(skill.replace("_", " ").title() for skill in skill_set),
                 "old_score": score,
                 "new_score": new_score
             })
@@ -861,6 +884,7 @@ def predict():
         flash('Models not loaded properly. Please check system configuration.', 'error')
         return redirect(url_for('employability_page'))
 
+
 @app.route("/recommend", methods=['GET'])
 def recommendation_page():
     if 'user_id' not in session:
@@ -870,16 +894,16 @@ def recommendation_page():
     # Try to get parameters from URL first, then fall back to session
     preferred_job = request.args.get("job_role")
     user_skills_input = request.args.get("skills")
-    
+
     # If no parameters in URL, use session values
     if not preferred_job:
         preferred_job = session.get('last_preferred_role', '')
     if not user_skills_input:
         user_skills_input = session.get('last_skills_text', '')
-    
+
     # Also get missing skills from session if available
     missing_skills = session.get('last_missing_skills', [])
-    
+
     # Debug logging
     logger.info(f"Recommendation request - Job: {preferred_job}, Skills: {user_skills_input}")
 
@@ -889,22 +913,22 @@ def recommendation_page():
 
     # Process skills
     user_skills = [s.strip().lower() for s in user_skills_input.split(",")]
-    
+
     # Build user vector and get missing skills if not already in session
     if not missing_skills and not dataset.empty and feature_names:
         user_vector = build_user_vector(user_skills, feature_names)
         role_vector = role_vectors.get(preferred_job, [0] * len(feature_names))
-        
+
         missing_skills_full = skill_gap_analysis(
             user_vector,
             role_vector,
             feature_names
         )
         missing_skills = [skill for skill, _ in missing_skills_full[:10]]
-        
+
         # Store for future use
         session['last_missing_skills'] = missing_skills
-    
+
     # Calculate match percentage
     match_percent = 0
     if missing_skills and not dataset.empty and feature_names:
@@ -914,7 +938,7 @@ def recommendation_page():
 
     # Get course recommendations
     recommendations = get_course_recommendations(missing_skills, preferred_job)
-    
+
     # Format mismatches for display
     mismatches_display = [skill.replace('_', ' ').title() for skill in missing_skills]
 
@@ -937,6 +961,7 @@ def recommendation_page():
         metrics={"Precision": rf_precision, "Recall": rf_recall, "F1": rf_f1},
         user={'name': session['user_name']}
     )
+
 
 @app.route('/predict_skills', methods=['POST'])
 def predict_skills():
@@ -974,6 +999,7 @@ def predict_skills():
         "match_percent": match_percent
     })
 
+
 # Replace the market_demand route (around line 830-850) with this:
 
 @app.route("/market_demand", methods=["POST"])
@@ -983,10 +1009,10 @@ def market_demand():
 
     data = request.get_json()
     role = str(data.get("role", "")).strip().lower()
-    
+
     # Try exact match first
     skills = TOP_SKILLS.get(role, [])
-    
+
     # If no exact match, try fuzzy matching on role names
     if not skills:
         # Look for roles that contain this role
@@ -996,34 +1022,41 @@ def market_demand():
             all_skills = []
             for matching_role in matching_roles:
                 all_skills.extend(TOP_SKILLS[matching_role])
-            
+
             # Count frequencies and get top 10
             if all_skills:
                 counter = Counter(all_skills)
                 skills = [skill for skill, _ in counter.most_common(10)]
-    
+
     # If still no skills, provide some default based on role
     if not skills:
         default_skills_map = {
-            'software': ['python', 'java', 'javascript', 'react', 'sql', 'git', 'aws', 'docker', 'spring boot', 'agile'],
+            'software': ['python', 'java', 'javascript', 'react', 'sql', 'git', 'aws', 'docker', 'spring boot',
+                         'agile'],
             'qa': ['testing', 'selenium', 'python', 'java', 'automation', 'jira', 'agile', 'sql', 'jenkins', 'cypress'],
-            'security': ['network security', 'python', 'penetration testing', 'firewalls', 'cryptography', 'linux', 'cloud security', 'incident response', 'ethical hacking', 'siem'],
-            'data': ['python', 'sql', 'spark', 'hadoop', 'aws', 'etl', 'data warehousing', 'machine learning', 'pandas', 'scala'],
-            'devops': ['docker', 'kubernetes', 'aws', 'jenkins', 'linux', 'terraform', 'python', 'git', 'ansible', 'ci/cd'],
-            'database': ['sql', 'oracle', 'mysql', 'postgresql', 'mongodb', 'backup recovery', 'performance tuning', 'linux', 'data modeling', 'security'],
-            'embedded': ['c', 'c++', 'python', 'linux', 'rtos', 'microcontrollers', 'arm', 'iot', 'embedded systems', 'debugging']
+            'security': ['network security', 'python', 'penetration testing', 'firewalls', 'cryptography', 'linux',
+                         'cloud security', 'incident response', 'ethical hacking', 'siem'],
+            'data': ['python', 'sql', 'spark', 'hadoop', 'aws', 'etl', 'data warehousing', 'machine learning', 'pandas',
+                     'scala'],
+            'devops': ['docker', 'kubernetes', 'aws', 'jenkins', 'linux', 'terraform', 'python', 'git', 'ansible',
+                       'ci/cd'],
+            'database': ['sql', 'oracle', 'mysql', 'postgresql', 'mongodb', 'backup recovery', 'performance tuning',
+                         'linux', 'data modeling', 'security'],
+            'embedded': ['c', 'c++', 'python', 'linux', 'rtos', 'microcontrollers', 'arm', 'iot', 'embedded systems',
+                         'debugging']
         }
-        
+
         for key, default_skills in default_skills_map.items():
             if key in role:
                 skills = default_skills
                 break
-        
+
         # If still no skills, use a generic message
         if not skills:
             return jsonify({"skills": [], "message": f"No specific skills found for {role}. Please try another role."})
-    
+
     return jsonify({"skills": skills})
+
 
 @app.route("/market-demand")
 def market_demand_page():
@@ -1033,6 +1066,7 @@ def market_demand_page():
 
     return render_template("marketdemand.html", user={'name': session['user_name']})
 
+
 @app.route("/education_alignment")
 def education_alignment():
     if 'user_id' not in session:
@@ -1041,11 +1075,13 @@ def education_alignment():
 
     return render_template("index.html", user={'name': session['user_name']})
 
+
 # ===============================
 # EDUCATION-INDUSTRY PIPELINE API
 # ===============================
 
 _edu_analysis_cache = {"data": None, "timestamp": None}
+
 
 def _run_edu_pipeline(force_refresh=False):
     global _edu_analysis_cache
@@ -1055,45 +1091,45 @@ def _run_edu_pipeline(force_refresh=False):
 
     try:
         logger.info("Running education pipeline...")
-        
+
         if not os.path.exists("Data.csv"):
             logger.error("Data.csv not found")
             return {
                 "current_university": {"name": "No Data", "score": 0},
                 "market_benchmark": 0,
                 "university_scores": [],
-                "insights": [{"type": "error", "title": "Data File Missing", 
-                             "description": "Data.csv file not found. Please ensure the curriculum data file is present."}],
+                "insights": [{"type": "error", "title": "Data File Missing",
+                              "description": "Data.csv file not found. Please ensure the curriculum data file is present."}],
                 "cosine_available": False
             }
-        
+
         curriculum_df = pd.read_csv("Data.csv")
         logger.info(f"Loaded Data.csv with {len(curriculum_df)} rows")
-        
+
         curriculum_df["Skills"] = curriculum_df["Skills"].apply(clean_skills_cell)
-        
+
         try:
             market_skills = market_demand_skills()
             logger.info(f"Loaded {len(market_skills)} market skills")
         except Exception as e:
             logger.error(f"Error loading market skills: {e}")
             market_skills = set()
-        
+
         try:
             market_df = pd.read_csv("extracted_skills.csv")
             logger.info("Loaded extracted_skills.csv")
         except Exception as e:
             logger.error(f"Error loading extracted_skills.csv: {e}")
             market_df = pd.DataFrame()
-        
+
         jaccard_df = jaccard_relavance(curriculum_df, market_skills)
         jaccard_df["Jaccard_Pct"] = jaccard_df["Jaccard_Score"].apply(
             lambda s: round(float(s) * 100, 2)
         )
-        
+
         cosine_available = os.path.isdir("custom_it_curriculum_model")
         logger.info(f"Cosine model available: {cosine_available}")
-        
+
         if cosine_available and not market_df.empty:
             try:
                 cosine_df = cosine_relavance(curriculum_df, market_df)
@@ -1106,7 +1142,7 @@ def _run_edu_pipeline(force_refresh=False):
                 cosine_lookup = {}
         else:
             cosine_lookup = {}
-        
+
         university_scores = []
         for _, row in jaccard_df.iterrows():
             uni_name = str(row["University"])
@@ -1115,10 +1151,10 @@ def _run_edu_pipeline(force_refresh=False):
                 "jaccard": round(float(row["Jaccard_Pct"]), 2),
                 "cosine": cosine_lookup.get(uni_name, None),
             })
-        
+
         sort_key = "cosine" if cosine_available else "jaccard"
         university_scores.sort(key=lambda u: u[sort_key] or 0, reverse=True)
-        
+
         if university_scores:
             top = university_scores[0]
             current_university = {
@@ -1127,15 +1163,42 @@ def _run_edu_pipeline(force_refresh=False):
                 "cosine": top["cosine"],
                 "score": top["cosine"] if top["cosine"] is not None else top["jaccard"],
             }
-            
+
             top2 = [u["cosine"] or u["jaccard"] for u in university_scores[:2]]
             market_benchmark = round(sum(top2) / len(top2), 2) if top2 else 0.0
         else:
             current_university = {"name": "No Data", "score": 0}
             market_benchmark = 0
-        
-        insights = _generate_insights(jaccard_df, market_skills, "Jaccard_Pct")
-        
+
+        # ── Build per-university gap & strength data ──────────────────
+        import re as _re
+        def _tok(phrase):
+            return {w.lower() for w in _re.findall(r"[a-zA-Z0-9#+.]+", phrase)}
+
+        gap_data = {}
+        for _, row in jaccard_df.iterrows():
+            uni = str(row["University"])
+            raw_matched = str(row.get("Matched_Skills", ""))
+            matched = [s.strip() for s in raw_matched.split(",") if s.strip()]
+
+            matched_tokens = set()
+            for m in matched:
+                matched_tokens |= _tok(m)
+
+            gaps = sorted([
+                p for p in market_skills
+                if not _tok(p) & matched_tokens
+            ])
+
+            gap_data[uni] = {
+                "gaps": gaps[:8],
+                "matched": matched[:8],
+            }
+
+        insights = _generate_insights(
+            jaccard_df, market_skills, "Jaccard_Pct", gap_data=gap_data
+        )
+
         result = {
             "current_university": current_university,
             "market_benchmark": market_benchmark,
@@ -1143,13 +1206,13 @@ def _run_edu_pipeline(force_refresh=False):
             "insights": insights,
             "cosine_available": cosine_available,
         }
-        
+
         _edu_analysis_cache["data"] = result
         _edu_analysis_cache["timestamp"] = datetime.now().isoformat()
         logger.info("Education pipeline completed successfully")
-        
+
         return result
-        
+
     except Exception as e:
         logger.error(f"Error in education pipeline: {e}")
         logger.error(traceback.format_exc())
@@ -1157,140 +1220,148 @@ def _run_edu_pipeline(force_refresh=False):
             "current_university": {"name": "Error", "score": 0},
             "market_benchmark": 0,
             "university_scores": [],
-            "insights": [{"type": "error", "title": "Pipeline Error", 
-                         "description": f"An error occurred: {str(e)}"}],
+            "insights": [{"type": "error", "title": "Pipeline Error",
+                          "description": f"An error occurred: {str(e)}"}],
             "cosine_available": False
         }
 
-def _generate_insights(results_df, market_skills, score_col):
-    """Derive structured insight cards from pipeline output."""
+
+def _generate_insights(results_df, market_skills, score_col, gap_data=None):
+    """
+    Generate per-university skill gap, strength, and recommendation insight
+    cards — all derived from pipeline output, nothing hardcoded.
+
+    gap_data format:
+    {
+        "UniversityName": {
+            "gaps":    ["docker", "kubernetes", ...],
+            "matched": ["python", "sql", ...],
+        },
+        ...
+    }
+    """
     insights = []
-    
+    gap_data = gap_data or {}
+
     try:
-        per_uni_matched = {}
+        # ── Per-university: Skill Gap cards ───────────────────────────
         for _, row in results_df.iterrows():
-            raw = str(row.get("Matched_Skills", ""))
-            matched = {s.strip().lower() for s in raw.split(",") if s.strip()}
-            per_uni_matched[str(row["University"])] = matched
-        
-        all_matched = set().union(*per_uni_matched.values()) if per_uni_matched else set()
-        
-        import re
-        def _tokenise(phrase):
-            return {w.lower() for w in re.findall(r"[a-zA-Z0-9#+.]+", phrase)}
-        
-        global_gaps = [
-            phrase for phrase in market_skills
-            if not _tokenise(phrase) & all_matched
-        ]
-        global_gaps.sort()
-        
-        if len(per_uni_matched) > 1:
-            universal_strengths = set.intersection(*per_uni_matched.values())
-        else:
-            universal_strengths = next(iter(per_uni_matched.values()), set())
-        
-        if global_gaps:
-            sample = [g.title() for g in global_gaps[:5]]
+            uni = str(row["University"])
+            score = round(float(row[score_col]), 2)
+            gaps = gap_data.get(uni, {}).get("gaps", [])[:6]
+
+            if not gaps:
+                description = (
+                    f"{uni} shows strong alignment ({score}%) with "
+                    f"no significant skill gaps detected."
+                )
+            else:
+                description = (
+                    f"{uni} has a curriculum alignment score of {score}%. "
+                    f"The following market-demanded skills are absent or "
+                    f"under-covered in its current course offerings."
+                )
+
             insights.append({
                 "type": "skill_gap",
-                "title": "Missing Skills Across All Curricula",
-                "description": (
-                    f"The following market-demanded skills are absent from every university "
-                    f"curriculum analysed: {', '.join(sample)}. "
-                    f"A total of {len(global_gaps)} such gaps were identified."
-                ),
+                "university": uni,
+                "title": f"{uni} \u2014 Missing Skills",
+                "description": description,
+                "skills": [g.title() for g in gaps],
+                "score": score,
             })
-        
-        if len(results_df) > 1:
-            lowest_row = results_df.iloc[-1]
-            lowest_name = str(lowest_row["University"])
-            lowest_gaps = [
-                phrase for phrase in market_skills
-                if not _tokenise(phrase) & per_uni_matched.get(lowest_name, set())
-            ]
-            lowest_gaps.sort()
-            if lowest_gaps:
-                sample = [g.title() for g in lowest_gaps[:4]]
-                insights.append({
-                    "type": "skill_gap",
-                    "title": f"Largest Alignment Gap: {lowest_name}",
-                    "description": (
-                        f"{lowest_name} has the lowest curriculum relevance score "
-                        f"({round(float(lowest_row[score_col]), 1)}%). "
-                        f"Key missing areas include: {', '.join(sample)}."
-                    ),
-                })
-        
-        if universal_strengths:
-            sample = sorted(universal_strengths)[:5]
+
+        # ── Per-university: Strength cards ────────────────────────────
+        for _, row in results_df.sort_values(score_col, ascending=False).iterrows():
+            uni = str(row["University"])
+            score = round(float(row[score_col]), 2)
+            matched = gap_data.get(uni, {}).get("matched", [])[:6]
+
+            if not matched:
+                description = (
+                    f"No explicit skill matches were extracted for {uni} "
+                    f"in this analysis run."
+                )
+            else:
+                description = (
+                    f"{uni} demonstrates solid curriculum coverage of "
+                    f"the following industry-relevant skills "
+                    f"(alignment score: {score}%)."
+                )
+
             insights.append({
                 "type": "strength",
-                "title": "Universally Strong Curriculum Areas",
-                "description": (
-                    f"All universities show consistent coverage in: "
-                    f"{', '.join(s.title() for s in sample)}. "
-                    f"These topics align well with current industry demand."
-                ),
+                "university": uni,
+                "title": f"{uni} \u2014 Core Strengths",
+                "description": description,
+                "skills": [m.title() for m in matched],
+                "score": score,
             })
-        
-        if len(results_df) > 0:
-            top_name = str(results_df.iloc[0]["University"])
-            top_matched = per_uni_matched.get(top_name, set())
-            others_union = set().union(
-                *[v for k, v in per_uni_matched.items() if k != top_name]
-            ) if len(per_uni_matched) > 1 else set()
-            unique_to_top = top_matched - others_union
-            if unique_to_top:
-                sample = sorted(unique_to_top)[:4]
-                insights.append({
-                    "type": "strength",
-                    "title": f"Best Performer: {top_name}",
-                    "description": (
-                        f"{top_name} leads the ranking with exclusive coverage of: "
-                        f"{', '.join(s.title() for s in sample)}, "
-                        f"giving it a competitive edge over peers."
-                    ),
-                })
-        
-        avg_score = results_df[score_col].mean()
+
+        # ── Global: common gap recommendation card ────────────────────
+        from collections import Counter as _Counter
+        avg_score = round(float(results_df[score_col].mean()), 2)
+        all_gaps_flat = []
+        for d in gap_data.values():
+            all_gaps_flat.extend(d.get("gaps", []))
+        common_gaps = [g for g, _ in _Counter(all_gaps_flat).most_common(6)]
+
         insights.append({
             "type": "recommendation",
-            "title": "Prioritise High-Impact Missing Skills",
+            "university": "all",
+            "title": "Priority Skills to Add Across All Curricula",
             "description": (
-                f"Average curriculum alignment currently sits at {avg_score:.1f}%. "
-                f"Introducing modules focused on the identified gap areas could "
-                f"lift the average score by an estimated 10–15 percentage points."
+                f"Average alignment across all universities is {avg_score}%. "
+                f"These skills appear as gaps in the majority of curricula "
+                f"and have the highest potential impact if introduced."
             ),
+            "skills": [g.title() for g in common_gaps],
+            "score": avg_score,
         })
-        
-        if global_gaps:
-            sample = [g.title() for g in global_gaps[:3]]
+
+        # ── Per-university: Recommendation cards (bottom scorers) ─────
+        for _, row in results_df.sort_values(score_col).iterrows():
+            uni = str(row["University"])
+            score = round(float(row[score_col]), 2)
+            gaps = gap_data.get(uni, {}).get("gaps", [])[:4]
+
+            if not gaps:
+                continue
+
+            potential_gain = round(min(100 - score, len(gaps) * 2.5), 1)
+
             insights.append({
                 "type": "recommendation",
-                "title": "Recommended New Curriculum Modules",
+                "university": uni,
+                "title": f"{uni} \u2014 Recommended Modules",
                 "description": (
-                    f"Consider adding dedicated modules for: {', '.join(sample)}. "
-                    f"These skills are consistently in demand by industry but "
-                    f"underrepresented across all current course offerings."
+                    f"Introducing dedicated modules for the skills listed below "
+                    f"could improve {uni}'s alignment score by an estimated "
+                    f"{potential_gain} percentage points."
                 ),
+                "skills": [g.title() for g in gaps],
+                "score": score,
             })
-    
+
     except Exception as e:
         logger.error(f"Error generating insights: {e}")
         insights.append({
             "type": "error",
+            "university": "all",
             "title": "Analysis Error",
-            "description": "Unable to generate insights due to an internal error."
+            "description": "Unable to generate insights due to an internal error.",
+            "skills": [],
+            "score": None,
         })
-    
+
     return insights
+
 
 @app.route("/api/analysis")
 def api_analysis():
     """
     JSON endpoint consumed by script.js.
-    
+
     Query params
     ------------
     refresh=true  — bypass cache and re-run the full pipeline.
@@ -1311,25 +1382,28 @@ def api_analysis():
         logger.error(traceback.format_exc())
         return jsonify({"status": "error", "message": str(e)}), 500
 
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
+
 
 @app.errorhandler(500)
 def internal_server_error(e):
     logger.error(f"500 error: {e}")
     return render_template('500.html'), 500
 
+
 if __name__ == "__main__":
     # Print startup information
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print("SkillSync Application Starting...")
-    print("="*60)
+    print("=" * 60)
     print(f"Current directory: {os.getcwd()}")
     print(f"Data.csv exists: {os.path.exists('Data.csv')}")
     print(f"extracted_skills.csv exists: {os.path.exists('extracted_skills.csv')}")
     print(f"custom_it_curriculum_model exists: {os.path.exists('custom_it_curriculum_model')}")
     print(f"Model files exist: {os.path.exists('saved_models/best_rf_model.pkl')}")
-    print("="*60 + "\n")
-    
+    print("=" * 60 + "\n")
+
     app.run(debug=True, host='0.0.0.0', port=5000)
