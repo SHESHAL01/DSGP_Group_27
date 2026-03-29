@@ -28,40 +28,49 @@
 </header>
 
 <main class="container">
+    <div class="main-content-wrapper">
 
-    <!-- HERO -->
-    <section class="hero">
-        <h1>Market Demand Analyzer</h1>
-        <p>Understand which skills employers in Sri Lanka value most for your role.</p>
-    </section>
+        <div class="left-column">
+            <section class="hero">
+                <h1>Market Demand<br>Analyzer</h1>
+                <p>Understand which skills employers in Sri Lanka value most for your role.</p>
+            </section>
 
-    <!-- INPUT CARD -->
-    <section class="control-panel">
-        <div class="control-content">
-            <select id="roleSelect">
-                <option value="software engineer">Software Engineer</option>
-                <option value="qa engineer">QA Engineer</option>
-                <option value="cybersecurity engineer">Cyber-Security Engineer</option>
-                <option value="data engineer">Data Engineer</option>
-                <option value="devops engineer">DevOps Engineer</option>
-                <option value="embedded engineer">Embedded Engineer</option>
-                <option value="data scientist">Data Scientist</option>
-                <option value="data analyst">Data Analyst</option>
-                <option value="database administrator">Database Administrator</option>
-            </select>
+            <section class="control-panel">
+                <div class="control-content">
+                    <div class="select-wrapper">
+                        <select id="roleSelect">
+                            <option value="software engineer">Software Engineer</option>
+                            <option value="qa engineer">QA Engineer</option>
+                            <option value="database administrator">Database Administrator</option>
+                            <option value="data engineer">Data Engineer</option>
+                            <option value="data scientist">Data Scientist</option>
+                            <option value="devops engineer">DevOps Engineer</option>
+                            <option value="cybersecurity engineer">Cyber-Security Engineer</option>
+                            <option value="data analyst">Data Analyst</option>
+                            <option value="embedded engineer">Embedded Engineer</option>
 
-            <button onclick="getSkills()" class="btn-primary">
-                Analyze Market Demand
-            </button>
+
+                        </select>
+                        <div class="select-arrow">▼</div>
+                    </div>
+
+                    <button onclick="getSkills()" class="btn-primary">
+                        <span>Analyze Market Demand</span>
+                    </button>
+                </div>
+            </section>
         </div>
-    </section>
 
-    <!-- RESULTS -->
-    <section id="results" class="results-section placeholder">
-        <p class="placeholder-text">
-            Select a role to view the most in-demand skills in the current job market.
-        </p>
-    </section>
+        <div class="right-column">
+            <section id="results" class="results-section placeholder">
+                <p class="placeholder-text">
+                    Select a role to view the most in-demand skills in the current job market.
+                </p>
+            </section>
+        </div>
+
+    </div>
 </main>
 
 <footer class="footer">
@@ -72,10 +81,9 @@
 function getSkills() {
     const role = document.getElementById("roleSelect").value;
     const resultsSection = document.getElementById("results");
-    
-    // Show loading state
-    resultsSection.innerHTML = '<div class="loading-message"><div class="spinner"></div><p>Analyzing market demand...</p></div>';
-    resultsSection.classList.remove("placeholder");
+
+    // Add a loading state
+    resultsSection.innerHTML = '<p class="placeholder-text pulse">Analyzing market demand...</p>';
 
     fetch("/market_demand", {
         method: "POST",
@@ -86,84 +94,42 @@ function getSkills() {
     })
     .then(response => response.json())
     .then(data => {
-        if (data.error) {
-            resultsSection.innerHTML = `
-                <div class="error-message">
-                    <h3>⚠️ Error</h3>
-                    <p>${data.error}</p>
-                    <button onclick="getSkills()" class="retry-btn">Try Again</button>
-                </div>
-            `;
-            return;
-        }
+        // Remove the placeholder class so the new CSS applies properly
+        resultsSection.classList.remove("placeholder");
 
         if (!data.skills || data.skills.length === 0) {
-            const message = data.message || `We couldn't find specific skill data for "${role}".`;
-            resultsSection.innerHTML = `
-                <div class="info-message">
-                    <h3>📊 No Data Available</h3>
-                    <p>${message}</p>
-                    <p>Try selecting another role or check back later as we update our database.</p>
-                    <div class="suggestion">
-                        <strong>Suggested roles to try:</strong><br>
-                        Software Engineer, Data Engineer, DevOps Engineer, QA Engineer
-                    </div>
-                </div>
-            `;
+            resultsSection.innerHTML = '<p class="placeholder-text">No data available for this role.</p>';
+            resultsSection.classList.add("placeholder");
             return;
         }
 
-        // Capitalize role name for display
-        const displayRole = role.split(' ').map(word => 
-            word.charAt(0).toUpperCase() + word.slice(1)
-        ).join(' ');
+        // Build the HTML structure for the grid
+        let html = '<div class="skills-cards">';
 
-        let html = `
-            <div class="results-header">
-                <h2>🎯 Top Skills for ${displayRole}</h2>
-                <p class="skill-count">${data.skills.length} in-demand skills found</p>
-            </div>
-            <div class="skills-cards">
-        `;
-
-        data.skills.forEach((skill, index) => {
-            // Add some variety to the cards
-            const delay = index * 50;
+        // Create a card for each skill
+        data.skills.forEach(skill => {
+            // Capitalize the first letter of each word
+            const formattedSkill = skill.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
             html += `
-                <div class="skill-card" style="animation-delay: ${delay}ms">
-                    <span class="skill-name">${skill}</span>
+            <div class="skill-card-container">
+                <div class="skill-card">
+                    <div class="skill-name">${formattedSkill}</div>
                 </div>
-            `;
+
+            </div>`;
         });
 
-        html += "</div>";
-        
-        if (data.skills.length < 10) {
-            html += `<p class="note">📝 Showing ${data.skills.length} skills. More data will be added soon!</p>`;
-        } else {
-            html += `<p class="note">💡 Focus on these skills to improve your employability in ${displayRole} roles.</p>`;
-        }
+        html += "</div>"; // Close the grid container
 
+        // Inject the newly built HTML into the results section
         resultsSection.innerHTML = html;
     })
     .catch(error => {
         console.error("Error:", error);
-        resultsSection.innerHTML = `
-            <div class="error-message">
-                <h3>⚠️ Connection Error</h3>
-                <p>There was a problem fetching the skill data. Please check your connection and try again.</p>
-                <button onclick="getSkills()" class="retry-btn">Retry</button>
-            </div>
-        `;
+        resultsSection.innerHTML = '<p class="placeholder-text">An error occurred while fetching data.</p>';
+        resultsSection.classList.add("placeholder");
     });
 }
-
-// Add keyboard support
-document.getElementById("roleSelect").addEventListener("keypress", function(event) {
-    if (event.key === "Enter") {
-        getSkills();
-    }
-});
 </script>
 </body>
 </html>

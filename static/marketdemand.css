@@ -1,13 +1,12 @@
 :root {
     --bg-color: #000000;
-    --card-bg: rgba(28, 28, 30, 0.7);
+    /* Sleek, cool-toned dark glass that matches the blue gradient beautifully */
+    --card-bg: rgba(12, 16, 24, 0.65);
     --accent-color: #00e0c6;
     --text-primary: #ffffff;
     --text-secondary: #a1a1a6;
-    --glass-border: rgba(255, 255, 255, 0.1);
-    --error-color: #ff6b6b;
-    --success-color: #51cf66;
-    --warning-color: #ffd93d;
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-border-hover: rgba(255, 255, 255, 0.15);
 }
 
 * {
@@ -17,11 +16,15 @@
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
 }
 
+/* Flex layout on body ensures the footer always stays at the bottom */
 body {
     background-color: var(--bg-color);
-    background-image: radial-gradient(circle at 50% -20%, #1d4e7a 0%, #000000 70%);
+    background-image: radial-gradient(circle at 30% 0%, #1d4e7a 0%, #000000 70%);
+    background-attachment: fixed;
     color: var(--text-primary);
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 /* HEADER */
@@ -32,6 +35,7 @@ body {
     padding: 20px 80px;
     border-bottom: 1px solid var(--glass-border);
     backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
 }
 
 .logo img {
@@ -48,310 +52,258 @@ body {
     color: var(--text-secondary);
     text-decoration: none;
     font-size: 14px;
-    transition: color 0.3s ease;
+    transition: color 0.2s;
 }
 
 .navbar a:hover {
     color: var(--text-primary);
 }
 
-/* MAIN */
+/* MAIN CONTAINER */
 .container {
-    max-width: 1100px;
+    max-width: 1300px;
     margin: 0 auto;
-    padding: 80px 20px;
+    padding: 60px 40px;
+    flex: 1; /* This tells the main content to stretch, pushing the footer down */
+    width: 100%;
+    display: flex;
+    align-items: center; /* Vertically centers the content in the viewport */
+}
+
+/* NEW 2-COLUMN LAYOUT */
+.main-content-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 80px;
+    align-items: flex-start; /* Aligns columns to the top */
+    justify-content: space-between;
+    width: 100%;
+}
+
+.left-column {
+    flex: 1;
+    min-width: 400px;
+    max-width: 450px;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centers the text and box horizontally */
+    text-align: center;  /* Centers the text inside the elements */
+}
+
+.right-column {
+    flex: 1.5;
+    min-width: 500px;
+    /* This min-height ensures the right side takes up space even when empty, preventing layout jumps */
+    min-height: 400px;
 }
 
 /* HERO */
 .hero {
-    text-align: center;
-    margin-bottom: 60px;
+    margin-bottom: 40px;
+    width: 100%;
 }
 
 .hero h1 {
-    font-size: 56px;
+    font-size: 54px;
     font-weight: 700;
     letter-spacing: -1.5px;
-    background: linear-gradient(to bottom, #ffffff, #a1a1a6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 18px;
+    color: #ffffff;
+    margin-bottom: 16px;
+    line-height: 1.1;
 }
 
 .hero p {
-    font-size: 20px;
+    font-size: 16px;
     color: var(--text-secondary);
+    max-width: 360px;
+    margin: 0 auto; /* Keep centered */
+    line-height: 1.5;
 }
 
-/* CONTROL PANEL */
+/* CONTROL PANEL - REDESIGNED */
 .control-panel {
-    display: flex;
-    justify-content: center;
-    margin-bottom: 60px;
-}
-
-.control-content {
     width: 100%;
-    max-width: 520px;
+    max-width: 380px;
     background: var(--card-bg);
     border: 1px solid var(--glass-border);
     border-radius: 24px;
-    padding: 36px;
-    backdrop-filter: blur(30px);
+    padding: 32px;
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
 }
 
-.control-content label {
-    display: block;
-    margin-bottom: 12px;
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--text-secondary);
+.control-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
-/* Centered select text */
-.control-content select {
-    width: 100%;
-    padding: 16px;
-    border-radius: 14px;
-    background: #1a1a1a;
-    color: white;
+/* Custom Select Wrapper */
+.select-wrapper {
+    position: relative;
+    border-radius: 12px;
+    background: rgba(0,0,0,0.4); /* Darker inset look */
     border: 1px solid var(--glass-border);
-    margin-bottom: 22px;
-    font-size: 16px;
-    text-align: center;
-    text-align-last: center;
-    cursor: pointer;
     transition: border-color 0.3s ease;
 }
 
-.control-content select option {
+.select-wrapper:hover {
+    border-color: var(--glass-border-hover);
+}
+
+.control-content select {
+    width: 100%;
+    padding: 18px 24px;
+    background: transparent;
+    color: var(--text-primary);
+    border: none;
+    font-size: 15px;
+    font-weight: 500;
+    appearance: none; /* Removes default arrow */
+    cursor: pointer;
+    /* Center text inside select */
     text-align: center;
+    text-align-last: center;
 }
 
 .control-content select:focus {
     outline: none;
-    border-color: var(--accent-color);
 }
 
-/* PRIMARY BUTTON */
+.control-content select option {
+    background: #111;
+    color: white;
+}
+
+.select-arrow {
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: var(--text-secondary);
+    pointer-events: none;
+}
+
+/* PRIMARY BUTTON - REDESIGNED */
 .btn-primary {
     width: 100%;
-    padding: 16px;
-    border-radius: 14px;
+    padding: 18px;
+    border-radius: 12px;
     border: none;
     background: #ffffff;
     color: #000000;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.25s ease;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .btn-primary:hover {
-    background: radial-gradient(circle at 50% -20%, rgba(29, 78, 122, 0.95), rgba(0, 0, 0, 0.95));
-    color: var(--text-primary);
-    transform: scale(1.015);
-    box-shadow: 0 0 22px rgba(29, 78, 122, 0.6);
+    transform: translateY(-2px);
+    background: #f0f0f0;
+    box-shadow: 0 8px 20px rgba(255, 255, 255, 0.15);
+}
+
+.btn-primary:active {
+    transform: translateY(1px);
 }
 
 /* RESULTS SECTION */
 .results-section {
-    animation: fadeUp 0.4s ease;
-}
-
-.results-header {
-    text-align: center;
-    margin-bottom: 40px;
-}
-
-.results-header h2 {
-    font-size: 32px;
-    margin-bottom: 8px;
-    background: linear-gradient(to bottom, #ffffff, #a1a1a6);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.skill-count {
-    color: var(--accent-color);
-    font-size: 14px;
-    font-weight: 500;
-}
-
-/* SKILL CARDS */
-.skills-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
-}
-
-.skill-card {
-    background: var(--card-bg);
-    border: 1px solid var(--glass-border);
-    border-radius: 18px;
-    padding: 20px;
-    text-align: center;
-    backdrop-filter: blur(25px);
-    transition: all 0.3s ease;
-    opacity: 0;
-    animation: fadeInUp 0.5s ease forwards;
-    position: relative;
-    overflow: hidden;
-}
-
-.skill-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
+    animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-    transition: left 0.5s ease;
-}
-
-.skill-card:hover::before {
-    left: 100%;
-}
-
-.skill-card:hover {
-    transform: translateY(-4px);
-    border-color: var(--accent-color);
-}
-
-.skill-name {
-    display: block;
-    font-size: 16px;
-    font-weight: 500;
-    letter-spacing: 0.3px;
 }
 
 /* Placeholder */
 .results-section.placeholder {
-    text-align: center;
-    opacity: 0.75;
-    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .placeholder-text {
     font-size: 16px;
     color: var(--text-secondary);
-    max-width: 520px;
+    text-align: center;
+}
+
+.pulse {
+    animation: pulseText 1.5s infinite;
+}
+
+@keyframes pulseText {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
+}
+
+.skills-cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 30px;
+    align-items: flex-end;
+    max-width: 580px;
     margin: 0 auto;
-    line-height: 1.6;
 }
 
-/* Loading State */
-.loading-message {
+.skill-card-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    /* The calc formula creates a 3-column layout while accounting for the 30px gap */
+    flex: 0 0 calc(33.333% - 20px);
+    min-width: 160px; /* Ensures they don't crush too small */
+}
+
+.skill-card {
+    width: 100%;
+    background: var(--card-bg); /* Unifies background with control panel */
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 24px 16px;
     text-align: center;
-    padding: 60px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+    backdrop-filter: blur(25px);
+    -webkit-backdrop-filter: blur(25px);
+    transition: all 0.3s ease;
 }
 
-.spinner {
-    width: 50px;
-    height: 50px;
-    border: 3px solid var(--glass-border);
-    border-top-color: var(--accent-color);
-    border-radius: 50%;
-    margin: 0 auto 20px;
-    animation: spin 1s linear infinite;
+.skill-card:hover {
+    transform: translateY(-5px);
+    background: rgba(20, 26, 38, 0.8); /* Slightly brighter cool tone on hover */
+    border-color: var(--glass-border-hover);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
+.skill-name {
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
 }
 
-/* Error & Info Messages */
-.error-message, .info-message {
-    text-align: center;
-    padding: 40px;
-    background: var(--card-bg);
-    border-radius: 24px;
-    margin: 20px 0;
-}
-
-.error-message h3, .info-message h3 {
-    margin-bottom: 16px;
-    font-size: 24px;
-}
-
-.error-message h3 {
-    color: var(--error-color);
-}
-
-.info-message h3 {
-    color: var(--warning-color);
-}
-
-.error-message p, .info-message p {
+.skill-subtext {
+    font-size: 12px;
     color: var(--text-secondary);
-    margin-bottom: 12px;
-    line-height: 1.6;
-}
-
-.suggestion {
-    margin-top: 24px;
-    padding: 16px;
-    background: rgba(0, 224, 198, 0.1);
-    border-radius: 12px;
-    text-align: left;
-}
-
-.suggestion strong {
-    color: var(--accent-color);
-    display: block;
-    margin-bottom: 8px;
-}
-
-.retry-btn {
-    margin-top: 20px;
-    padding: 10px 24px;
-    background: var(--accent-color);
-    color: #000;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: transform 0.2s ease;
-}
-
-.retry-btn:hover {
-    transform: scale(1.05);
-}
-
-.note {
     text-align: center;
-    color: var(--text-secondary);
-    margin-top: 30px;
-    font-size: 14px;
-    padding: 16px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 12px;
 }
 
 /* FOOTER */
 .footer {
-    padding: 60px;
+    padding: 30px 60px;
     text-align: center;
-    font-size: 13px;
+    font-size: 12px;
     color: var(--text-secondary);
     border-top: 1px solid var(--glass-border);
+    margin-top: auto; /* Pushes it to the absolute bottom */
 }
 
-/* Animations */
+/* ANIMATIONS */
 @keyframes fadeUp {
-    from {
-        opacity: 0;
-        transform: translateY(14px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-@keyframes fadeInUp {
     from {
         opacity: 0;
         transform: translateY(20px);
@@ -359,64 +311,5 @@ body {
     to {
         opacity: 1;
         transform: translateY(0);
-    }
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .header {
-        padding: 20px 20px;
-        flex-direction: column;
-        gap: 20px;
-    }
-    
-    .navbar ul {
-        gap: 20px;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    
-    .hero h1 {
-        font-size: 36px;
-    }
-    
-    .hero p {
-        font-size: 16px;
-    }
-    
-    .container {
-        padding: 40px 20px;
-    }
-    
-    .control-content {
-        padding: 24px;
-    }
-    
-    .skills-cards {
-        grid-template-columns: 1fr;
-        gap: 12px;
-    }
-    
-    .skill-card {
-        padding: 16px;
-    }
-    
-    .results-header h2 {
-        font-size: 24px;
-    }
-}
-
-@media (max-width: 480px) {
-    .hero h1 {
-        font-size: 28px;
-    }
-    
-    .control-content select,
-    .btn-primary {
-        font-size: 14px;
-    }
-    
-    .skill-name {
-        font-size: 14px;
     }
 }
