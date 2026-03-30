@@ -115,7 +115,21 @@ def predict():
     user_skills = [s.strip() for s in skills_text.split(",")]
 
     # Build vector
-    user_vector = build_user_vector(user_skills, feature_names)
+    user_vector, valid_skills = build_user_vector(user_skills, feature_names)
+    if len(valid_skills) == 0:
+        return render_template(
+            "employability.html",
+            score=0,
+            status="Invalid Skills Entered",
+            important_skills=[],
+            alternative_roles=[],
+            missing_skills=[],
+            simulations=[],
+            top_models=top_models,
+            precision=rf_precision,
+            recall=rf_recall,
+            f1=rf_f1
+        )
 
     # ===============================
     # Employability prediction
@@ -176,7 +190,7 @@ def predict():
 
     role_vector = role_vectors[preferred_role]
 
-    for skill in user_skills:
+    for skill in valid_skills:
 
         if skill in feature_names:
             idx = feature_names.index(skill)
