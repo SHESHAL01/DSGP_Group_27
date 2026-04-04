@@ -1,7 +1,5 @@
 import numpy as np
 
-import numpy as np
-
 def predict_employability(model, user_vector, preferred_role, role_vectors, feature_names, threshold=40):
 
     role_vector = role_vectors[preferred_role]
