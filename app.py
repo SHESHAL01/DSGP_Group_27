@@ -726,164 +726,196 @@ def employability_page():
 
 @app.route("/predict", methods=["POST"])
 def predict():
+    # ===============================
+    # Session check
+    # ===============================
     if 'user_id' not in session:
         return {'error': 'Please log in'}, 401
 
-    preferred_role = request.form["preferred_role"]
-    skills_text = request.form["skills"]
-    user_skills = [s.strip() for s in skills_text.split(",")]
+    preferred_role = request.form.get("preferred_role", "").strip()
+    skills_text = request.form.get("skills", "").strip()
 
-    # Store these values in session for later use
+    if not preferred_role or not skills_text:
+        flash("Please enter both preferred role and skills.", "error")
+        return redirect(url_for('employability_page'))
+
+    user_skills = [s.strip().lower() for s in skills_text.split(",") if s.strip()]
+
+    # Store for later use
     session['last_preferred_role'] = preferred_role
     session['last_skills_text'] = skills_text
 
-    if not dataset.empty and feature_names and rf_model:
-        user_vector = build_user_vector(user_skills, feature_names)
+    # ===============================
+    # Model availability check
+    # ===============================
+    if dataset.empty or not feature_names or not rf_model:
+        flash('Models not loaded properly. Please check system configuration.', 'error')
+        return redirect(url_for('employability_page'))
 
-        # ===============================
-        # Employability prediction
-        # ===============================
+    # ===============================
+    # Build user vector + validation
+    # ===============================
+    user_vector, valid_skills = build_user_vector(user_skills, feature_names)
 
-        score, role_probs, alternative_roles = predict_employability(
-            rf_model,
-            user_vector,
-            preferred_role,
-            role_vectors,
-            feature_names
-        )
-
-        # Round alternative role scores
-        alternative_roles = [
-            (role, round(prob, 2)) for role, prob in alternative_roles
-        ]
-
-        score = round(score, 2)
-
-        # ===============================
-        # Status
-        # ===============================
-
-        if score > 75:
-            status = "Highly Employable"
-
-        elif score > 50:
-            status = "Moderately Employable"
-
-        else:
-            status = "Needs Skill Improvement"
-
-        # ===============================
-        # Skill Gap Analysis
-        # ===============================
-
-        role_vector = role_vectors[preferred_role]
-
-        missing_skills_full = skill_gap_analysis(
-            user_vector,
-            role_vector,
-            feature_names
-        )
-
-        missing_skills = missing_skills_full[:6]
-
-        # Store missing skills in session for recommendation page
-        session['last_missing_skills'] = [skill for skill, _ in missing_skills_full[:10]]
-
-        # keep only skill names for display
-        missing_skills_display = [
-            skill.replace("_", " ").title()
-            for skill, _ in missing_skills
-        ]
-
-        # ===============================
-        # Explainable AI
-        # ===============================
-
-        important_skills = []
-
-        for skill in user_skills:
-            if skill in feature_names:
-                idx = feature_names.index(skill)
-                role_value = role_vector[idx]
-                importance = role_value
-                important_skills.append((skill, importance))
-
-        # Sort by importance
-        important_skills = sorted(
-            important_skills,
-            key=lambda x: x[1],
-            reverse=True
-        )[:4]
-
-        # Log scaling for visualization
-        scaled_skills = []
-
-        if important_skills:
-            max_importance = max([imp for _, imp in important_skills])
-
-            for skill, imp in important_skills:
-                scaled = (imp / max_importance) * 85
-                scaled_skills.append(
-                    (skill.replace("_", " ").title(), round(scaled, 2))
-                )
-
-        important_skills = scaled_skills
-
-        # ===============================
-        # Career growth simulation
-        # ===============================
-
-        from itertools import combinations
-
-        missing_skills_only = [skill for skill, _ in missing_skills_full]
-
-        simulations = []
-
-        skill_sets = []
-
-        skill_sets += list(combinations(missing_skills_only, 1))
-        skill_sets += list(combinations(missing_skills_only, 2))
-
-        skill_sets = skill_sets[:4]
-
-        for skill_set in skill_sets:
-            sim_result = simulate_career_growth(
-                rf_model,
-                user_vector,
-                list(skill_set),
-                feature_names,
-                role_vectors
-            )
-
-            new_score = round(sim_result.get(preferred_role, 0) * 100, 2)
-
-            simulations.append({
-                "skills": " + ".join(skill.replace("_", " ").title() for skill in skill_set),
-                "old_score": score,
-                "new_score": new_score
-            })
-
+    if len(valid_skills) == 0:
         return render_template(
             "employability.html",
-            score=score,
-            status=status,
-            important_skills=important_skills,
-            alternative_roles=alternative_roles,
-            missing_skills=missing_skills_display,
-            simulations=simulations,
-            lower1=score,
-            lower2=score,
+            score=0,
+            status="Invalid Skills Entered",
+            important_skills=[],
+            alternative_roles=[],
+            missing_skills=[],
+            simulations=[],
+            lower1=0,
+            lower2=0,
             top_models=top_models,
             precision=rf_precision,
             recall=rf_recall,
             f1=rf_f1,
-            preferred_role=preferred_role,  # Pass to template
-            skills_text=skills_text  # Pass to template
+            preferred_role=preferred_role,
+            skills_text=skills_text
         )
+
+    # ===============================
+    # Employability prediction
+    # ===============================
+    score, role_probs, alternative_roles = predict_employability(
+        rf_model,
+        user_vector,
+        preferred_role,
+        role_vectors,
+        feature_names
+    )
+
+    score = round(score, 2)
+
+    alternative_roles = [
+        (role, round(prob, 2)) for role, prob in alternative_roles
+    ]
+
+    # ===============================
+    # Status classification
+    # ===============================
+    if score > 75:
+        status = "Highly Employable"
+    elif score > 50:
+        status = "Moderately Employable"
     else:
-        flash('Models not loaded properly. Please check system configuration.', 'error')
+        status = "Needs Skill Improvement"
+
+    # ===============================
+    # Skill Gap Analysis
+    # ===============================
+    role_vector = role_vectors.get(preferred_role)
+
+    if role_vector is None:
+        flash("Invalid role selected.", "error")
         return redirect(url_for('employability_page'))
 
+    missing_skills_full = skill_gap_analysis(
+        user_vector,
+        role_vector,
+        feature_names
+    )
+
+    missing_skills = missing_skills_full[:6]
+
+    # Store for recommendation page
+    session['last_missing_skills'] = [
+        skill for skill, _ in missing_skills_full[:10]
+    ]
+
+    missing_skills_display = [
+        skill.replace("_", " ").title()
+        for skill, _ in missing_skills
+    ]
+
+    # ===============================
+    # Explainable AI (important skills)
+    # ===============================
+    important_skills = []
+
+    for skill in valid_skills:
+        if skill in feature_names:
+            idx = feature_names.index(skill)
+            importance = role_vector[idx]
+            important_skills.append((skill, importance))
+
+    # Sort and pick top 4
+    important_skills = sorted(
+        important_skills,
+        key=lambda x: x[1],
+        reverse=True
+    )[:4]
+
+    # Scale values for UI visualization
+    scaled_skills = []
+
+    if important_skills:
+        max_importance = max([imp for _, imp in important_skills])
+
+        for skill, imp in important_skills:
+            scaled = (imp / max_importance) * 85
+            scaled_skills.append(
+                (skill.replace("_", " ").title(), round(scaled, 2))
+            )
+
+    important_skills = scaled_skills
+
+    # ===============================
+    # Career Growth Simulation
+    # ===============================
+    from itertools import combinations
+
+    missing_skills_only = [skill for skill, _ in missing_skills_full]
+
+    simulations = []
+    skill_sets = []
+
+    skill_sets += list(combinations(missing_skills_only, 1))
+    skill_sets += list(combinations(missing_skills_only, 2))
+
+    skill_sets = skill_sets[:4]
+
+    for skill_set in skill_sets:
+        sim_result = simulate_career_growth(
+            rf_model,
+            user_vector,
+            list(skill_set),
+            feature_names,
+            role_vectors
+        )
+
+        new_score = round(sim_result.get(preferred_role, 0) * 100, 2)
+
+        simulations.append({
+            "skills": " + ".join(
+                skill.replace("_", " ").title() for skill in skill_set
+            ),
+            "old_score": score,
+            "new_score": new_score
+        })
+
+    # ===============================
+    # Final render
+    # ===============================
+    return render_template(
+        "employability.html",
+        score=score,
+        status=status,
+        important_skills=important_skills,
+        alternative_roles=alternative_roles,
+        missing_skills=missing_skills_display,
+        simulations=simulations,
+        lower1=score,
+        lower2=score,
+        top_models=top_models,
+        precision=rf_precision,
+        recall=rf_recall,
+        f1=rf_f1,
+        preferred_role=preferred_role,
+        skills_text=skills_text
+    )
 
 @app.route("/recommend", methods=['GET'])
 def recommendation_page():
@@ -998,9 +1030,6 @@ def predict_skills():
         "mismatches": missing_skills_display,
         "match_percent": match_percent
     })
-
-
-# Replace the market_demand route (around line 830-850) with this:
 
 @app.route("/market_demand", methods=["POST"])
 def market_demand():
